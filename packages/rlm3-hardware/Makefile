@@ -3,7 +3,7 @@ DEPS += logger
 DEPS += hw-test-agent
 include ../build-scripts/release/include.make
 
-TOOLCHAIN_PATH = /opt/arm-none-eabi/bin/arm-none-eabi-
+TOOLCHAIN_PATH = /opt/gcc-arm-none-eabi-7-2018-q2-update/bin/arm-none-eabi-
 
 LIBRARY_DIRS = \
 	cube/Core/Inc \
