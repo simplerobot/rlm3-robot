@@ -41,9 +41,11 @@ VPATH = $(MCU_TEST_SOURCE_DIRS) $(CPU_TEST_SOURCE_DIRS)
 
 .PHONY: test-cpu test-mcu
 
-default : test-cpu test-mcu
+default : test
 
-test-cpu : $(CPU_TEST_BUILD_DIR)/a.out
+test : test-cpu test-mcu
+
+test-cpu : deps $(CPU_TEST_BUILD_DIR)/a.out
 	$(CPU_TEST_BUILD_DIR)/a.out
 
 $(CPU_TEST_BUILD_DIR)/a.out : $(CPU_TEST_O_FILES:%=$(CPU_TEST_BUILD_DIR)/%)
@@ -58,7 +60,7 @@ $(CPU_TEST_BUILD_DIR)/%.o : %.c Makefile | $(CPU_TEST_BUILD_DIR)
 $(CPU_TEST_BUILD_DIR) :
 	mkdir -p $@
 
-test-mcu : $(MCU_TEST_BUILD_DIR)/test.bin $(MCU_TEST_BUILD_DIR)/test.hex
+test-mcu : deps $(MCU_TEST_BUILD_DIR)/test.bin $(MCU_TEST_BUILD_DIR)/test.hex
 	$(PKG_HW_TEST_AGENT_DIR)/sr-hw-test-agent --run --test-timeout=60 --system-frequency=180m --trace-frequency=2m --board RLM36 --file $(MCU_TEST_BUILD_DIR)/test.bin
 
 $(MCU_TEST_BUILD_DIR)/test.bin : $(MCU_TEST_BUILD_DIR)/test.elf

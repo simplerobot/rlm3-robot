@@ -1,14 +1,22 @@
 
 PACKAGES = $(wildcard packages/*)
 
-.PHONY : default all release clean
+define NEWLINE
+
+
+endef
+
+.PHONY : default all release test build-deps clean
 
 default : release
 
-all : default
+all : release test
 
-release : 
-	$(foreach file, $(PACKAGES), $(MAKE) -C $(file) build-deps release;)
+$(eval build-deps : $(foreach file, $(PACKAGES), $(NEWLINE)	$(MAKE) -C $(file) --no-print-directory build-deps))
+
+$(eval release : build-deps $(foreach file, $(PACKAGES), $(NEWLINE)	$(MAKE) -C $(file) --no-print-directory release))
+
+$(eval test : build-deps $(foreach file, $(PACKAGES), $(NEWLINE)	$(MAKE) -C $(file)--no-print-directory test))
 
 clean :
 	rm -rf build

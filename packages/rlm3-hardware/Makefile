@@ -143,7 +143,7 @@ LIBRARY_LD_FILES = \
 
 LIBRARY_FILES = $(LIBRARY_H_FILES) $(LIBRARY_C_FILES) $(LIBRARY_S_FILES) $(LIBRARY_LD_FILES)
 
-LIBRARY_BUILD_DIR = $(BUILD_DIR)/test
+LIBRARY_BUILD_DIR = $(BUILD_DIR)/library
 TEST_BUILD_DIR = $(BUILD_DIR)/test
 RELEASE_BUILD_DIR = $(RELEASE_DIR)
 
@@ -178,6 +178,8 @@ INCLUDES = \
 
 default : library test release
 
+build-dep : release
+
 library : $(LIBRARY_FILES:%=$(LIBRARY_BUILD_DIR)/%)
 
 $(LIBRARY_BUILD_DIR)/% : % | $(LIBRARY_BUILD_DIR) $(LIBRARY_BUILD_DIR)/Legacy
@@ -189,7 +191,7 @@ $(LIBRARY_BUILD_DIR) :
 $(LIBRARY_BUILD_DIR)/Legacy :
 	mkdir -p $@
 
-test : library $(TEST_BUILD_DIR)/test.bin $(TEST_BUILD_DIR)/test.hex
+test : deps library $(TEST_BUILD_DIR)/test.bin $(TEST_BUILD_DIR)/test.hex
 	$(PKG_HW_TEST_AGENT_DIR)/sr-hw-test-agent --run --test-timeout=15 --trace-frequency=2m --system-frequency=180m --board RLM36 --file $(TEST_BUILD_DIR)/test.bin	
 	
 $(TEST_BUILD_DIR)/test.bin : $(TEST_BUILD_DIR)/test.elf

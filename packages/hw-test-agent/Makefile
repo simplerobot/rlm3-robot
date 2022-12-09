@@ -27,7 +27,7 @@ VPATH = $(TEST_SOURCE_DIRS) $(MAIN_SOURCE_DIRS)
 
 default : test main release
 
-test : $(TEST_BUILD_DIR)/a.out
+test : deps $(TEST_BUILD_DIR)/a.out
 	$(TEST_BUILD_DIR)/a.out
 
 $(TEST_BUILD_DIR)/a.out : $(TEST_O_FILES:%=$(TEST_BUILD_DIR)/%)
@@ -42,7 +42,7 @@ $(TEST_BUILD_DIR)/%.o : %.cpp Makefile | $(TEST_BUILD_DIR)
 $(TEST_BUILD_DIR) :
 	mkdir -p $@
 
-main : $(MAIN_BUILD_DIR)/a.out
+main : build-deps $(MAIN_BUILD_DIR)/a.out
 
 $(MAIN_BUILD_DIR)/a.out : $(MAIN_O_FILES:%=$(MAIN_BUILD_DIR)/%)
 	$(CC) $(MAIN_CFLAGS) -o $@ $^

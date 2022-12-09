@@ -40,7 +40,7 @@ VPATH = $(TEST_SOURCE_DIRS)
 
 default : test
 
-test : $(TEST_BUILD_DIR)/test.bin $(TEST_BUILD_DIR)/test.hex
+test : deps $(TEST_BUILD_DIR)/test.bin $(TEST_BUILD_DIR)/test.hex
 	$(PKG_HW_TEST_AGENT_DIR)/sr-hw-test-agent --run --test-timeout=15 --trace-frequency=2m --board RLM36 --file $(TEST_BUILD_DIR)/test.bin	
 
 $(TEST_BUILD_DIR)/test.bin : $(TEST_BUILD_DIR)/test.elf

@@ -20,9 +20,11 @@ CPU_INCLUDES = $(CPU_TEST_SOURCE_DIRS:%=-I%)
 
 .PHONY: test-cpu 
 
-default : test-cpu
+default : test
 
-test-cpu : $(CPU_TEST_BUILD_DIR)/a.out
+test : test-cpu
+
+test-cpu : deps $(CPU_TEST_BUILD_DIR)/a.out
 	$(CPU_TEST_BUILD_DIR)/a.out
 
 $(CPU_TEST_BUILD_DIR)/a.out : $(CPU_TEST_O_FILES:%=$(CPU_TEST_BUILD_DIR)/%)

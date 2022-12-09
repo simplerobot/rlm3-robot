@@ -49,7 +49,7 @@ VPATH = $(TEST_SOURCE_DIRS) $(STRESS_SOURCE_DIRS)
 
 default : test
 
-test : $(TEST_BUILD_DIR)/test.bin $(TEST_BUILD_DIR)/test.hex
+test : deps $(TEST_BUILD_DIR)/test.bin $(TEST_BUILD_DIR)/test.hex
 	$(PKG_HW_TEST_AGENT_DIR)/sr-hw-test-agent --run --test-timeout=15 --system-frequency=180m --trace-frequency=2m --board RLM36 --file $(TEST_BUILD_DIR)/test.bin	
 
 $(TEST_BUILD_DIR)/test.bin : $(TEST_BUILD_DIR)/test.elf
@@ -74,7 +74,7 @@ $(TEST_BUILD_DIR)/%.o : %.s Makefile | $(TEST_BUILD_DIR)
 $(TEST_BUILD_DIR) :
 	mkdir -p $@
 
-stress : $(STRESS_BUILD_DIR)/stress.bin $(STRESS_BUILD_DIR)/stress.hex
+stress : deps $(STRESS_BUILD_DIR)/stress.bin $(STRESS_BUILD_DIR)/stress.hex
 	$(PKG_HW_TEST_AGENT_DIR)/sr-hw-test-agent --run --test-timeout=330 --system-frequency=180m --trace-frequency=2m --board RLM36 --file $(STRESS_BUILD_DIR)/stress.bin	
 
 $(STRESS_BUILD_DIR)/stress.bin : $(STRESS_BUILD_DIR)/stress.elf

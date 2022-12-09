@@ -19,8 +19,8 @@ VPATH = $(TEST_SOURCE_DIRS)
 
 default : test
 
-test : $(TEST_BUILD_DIR)/a.out
-	$^
+test : deps $(TEST_BUILD_DIR)/a.out
+	$(TEST_BUILD_DIR)/a.out
 
 $(TEST_BUILD_DIR)/a.out : $(TEST_O_FILES:%=$(TEST_BUILD_DIR)/%)
 	$(CC) $(CFLAGS) -o $@ $^
