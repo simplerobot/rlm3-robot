@@ -43,6 +43,7 @@ extern void SIM_WIFI_SetLocalNetwork(const char* ssid, const char* password, siz
 extern void SIM_WIFI_SetServer(size_t link_id, const char* server, const char* service);
 extern void SIM_WIFI_Transmit(size_t link_id, const char* expected);
 extern void SIM_WIFI_Receive(size_t link_id, const char* data);
+extern void SIM_WIFI_ReceiveByte(size_t link_id, uint8_t byte);
 extern void SIM_WIFI_Connect(size_t link_id);
 extern void SIM_WIFI_Disconnect(size_t link_id);
 

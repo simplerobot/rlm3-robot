@@ -16,7 +16,7 @@ $(eval build-deps : $(foreach file, $(PACKAGES), $(NEWLINE)	$(MAKE) -C $(file) -
 
 $(eval release : build-deps $(foreach file, $(PACKAGES), $(NEWLINE)	$(MAKE) -C $(file) --no-print-directory release))
 
-$(eval test : build-deps $(foreach file, $(PACKAGES), $(NEWLINE)	$(MAKE) -C $(file)--no-print-directory test))
+$(eval test : build-deps $(foreach file, $(PACKAGES), $(NEWLINE)	$(MAKE) -C $(file) --no-print-directory test))
 
 clean :
 	rm -rf build

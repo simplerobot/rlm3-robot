@@ -305,6 +305,19 @@ extern void SIM_WIFI_Receive(size_t link_id, const char* data)
 	});
 }
 
+extern void SIM_WIFI_ReceiveByte(size_t link_id, uint8_t byte)
+{
+	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
+	SIM_AddInterrupt([=]() {
+		ASSERT(g_is_active);
+		ASSERT(g_is_network_connected || g_is_local_network_enabled);
+		ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
+		auto& s = g_server_settings[link_id];
+		ASSERT(s.is_connected);
+		RLM3_WIFI_Receive_Callback(link_id, byte);
+	});
+}
+
 extern void SIM_WIFI_Connect(size_t link_id)
 {
 	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);

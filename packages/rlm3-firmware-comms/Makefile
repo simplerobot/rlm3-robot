@@ -15,7 +15,7 @@ DEPS += hw-test-agent
 include ../build-scripts/release/include.make
 
 CPU_CC = g++
-CPU_CFLAGS = -Wall -Werror -pthread -DTEST -fsanitize=address -static-libasan -g -Og
+CPU_CFLAGS = -Wall -Werror -pthread -DTEST -DMOCK -fsanitize=address -static-libasan -g -Og
 
 MCU_TOOLCHAIN_PATH = /opt/gcc-arm-none-eabi-7-2018-q2-update/bin/arm-none-eabi-
 MCU_CC = $(MCU_TOOLCHAIN_PATH)gcc
@@ -29,7 +29,7 @@ MCU_CLIBS = -lc -lm -lstdc++
 
 CPU_TEST_BUILD_DIR = $(BUILD_DIR)/test-cpu
 CPU_TEST_SOURCE_DIR = test-cpu
-CPU_TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(CPU_TEST_SOURCE_DIR) $(PKG_RLM3_BASE_DIR) $(PKG_LOGGER_DIR) $(PKG_TEST_DIR) $(PKG_RLM3_DRIVER_BASE_SIM_DIR) $(PKG_RLM3_DRIVER_FLASH_SIM_DIR) $(PKG_RLM3_DRIVER_WIFI_DIR) $(PKG_RLM3_FIRMWARE_BASE_DIR) 
+CPU_TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(CPU_TEST_SOURCE_DIR) $(PKG_RLM3_BASE_DIR) $(PKG_LOGGER_DIR) $(PKG_TEST_DIR) $(PKG_RLM3_DRIVER_BASE_SIM_DIR) $(PKG_RLM3_DRIVER_FLASH_SIM_DIR) $(PKG_RLM3_DRIVER_WIFI_SIM_DIR) $(PKG_RLM3_FIRMWARE_BASE_DIR) 
 CPU_TEST_SOURCE_FILES = $(notdir $(wildcard $(CPU_TEST_SOURCE_DIRS:%=%/*.c) $(CPU_TEST_SOURCE_DIRS:%=%/*.cpp)))
 CPU_TEST_O_FILES = $(addsuffix .o,$(basename $(CPU_TEST_SOURCE_FILES)))
 CPU_INCLUDES = $(CPU_TEST_SOURCE_DIRS:%=-I%)
