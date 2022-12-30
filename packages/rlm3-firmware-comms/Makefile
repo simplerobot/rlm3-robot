@@ -15,7 +15,7 @@ DEPS += hw-test-agent
 include ../build-scripts/release/include.make
 
 CPU_CC = g++
-CPU_CFLAGS = -Wall -Werror -pthread -DTEST -DMOCK -fsanitize=address -static-libasan -g -Og
+CPU_CFLAGS = -Wall -Werror -pthread -DTEST -DMOCK_COMMS -fsanitize=address -static-libasan -g -Og
 
 MCU_TOOLCHAIN_PATH = /opt/gcc-arm-none-eabi-7-2018-q2-update/bin/arm-none-eabi-
 MCU_CC = $(MCU_TOOLCHAIN_PATH)gcc

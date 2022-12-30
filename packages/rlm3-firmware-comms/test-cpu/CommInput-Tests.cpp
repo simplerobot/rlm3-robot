@@ -50,7 +50,7 @@ TEST_CASE(CommInput_HappyCase)
 	Crc8 crc;
 	SIM_AddInterrupt([]{ CommInput_ResetPipeISR(); });
 	AddMessageInterrupts(crc, {
-			3, // MESSAGE_TYPE_CONTROL
+			4, // MESSAGE_TYPE_CONTROL
 			0x12, 0x34, 0x56, 0x78, // time
 			122, // left
 			(uint8_t)-7, // right
@@ -74,22 +74,22 @@ TEST_CASE(CommInput_MultipleMessages)
 	Crc8 crc;
 	SIM_AddInterrupt([]{ CommInput_ResetPipeISR(); });
 	AddMessageInterrupts(crc, {
-			3, // MESSAGE_TYPE_CONTROL
+			4, // MESSAGE_TYPE_CONTROL
 			0x12, 0x34, 0x56, 0x78, // time
 			122, // left
 			(uint8_t)-7, // right
 			5, // blade
 	});
 	AddMessageInterrupts(crc, {
-			0, // MESSAGE_TYPE_NONE
+			1, // MESSAGE_TYPE_NONE
 	});
 	AddMessageInterrupts(crc, {
-			1, // MESSAGE_TYPE_VERSION
+			2, // MESSAGE_TYPE_VERSION
 			0x9A, 0xBC, 0xDE, 0xF0, // id
 			0x11, 0x22, 0x33, 0x44, // version
 	});
 	AddMessageInterrupts(crc, {
-			2, // MESSAGE_TYPE_SYNC
+			3, // MESSAGE_TYPE_SYNC
 			0x13, 0x9B, 0x13, 0x9B, // time
 	});
 	// Tell the input thread to stop.
@@ -104,7 +104,7 @@ TEST_CASE(CommInput_BadCrc)
 	crc.add(0x12); // Mess up the crc calculation.
 	SIM_AddInterrupt([]{ CommInput_ResetPipeISR(); });
 	AddMessageInterrupts(crc, {
-			3, // MESSAGE_TYPE_CONTROL
+			4, // MESSAGE_TYPE_CONTROL
 			0x12, 0x34, 0x56, 0x78, // time
 			122, // left
 			(uint8_t)-7, // right
@@ -124,23 +124,23 @@ TEST_CASE(CommInput_ResetPipe)
 	Crc8 crc1, crc2;
 	SIM_AddInterrupt([]{ CommInput_ResetPipeISR(); });
 	AddMessageInterrupts(crc1, {
-			3, // MESSAGE_TYPE_CONTROL
+			4, // MESSAGE_TYPE_CONTROL
 			0x12, 0x34, 0x56, 0x78, // time
 			122, // left
 			(uint8_t)-7, // right
 			5, // blade
 	});
 	AddMessageInterrupts(crc1, {
-			0, // MESSAGE_TYPE_NONE
+			1, // MESSAGE_TYPE_NONE
 	});
 	SIM_AddInterrupt([]{ CommInput_ResetPipeISR(); });
 	AddMessageInterrupts(crc2, {
-			1, // MESSAGE_TYPE_VERSION
+			2, // MESSAGE_TYPE_VERSION
 			0x9A, 0xBC, 0xDE, 0xF0, // id
 			0x11, 0x22, 0x33, 0x44, // version
 	});
 	AddMessageInterrupts(crc2, {
-			2, // MESSAGE_TYPE_SYNC
+			3, // MESSAGE_TYPE_SYNC
 			0x13, 0x9B, 0x13, 0x9B, // time
 	});
 	// Tell the input thread to stop.
@@ -155,24 +155,24 @@ TEST_CASE(CommInput_ResetPipeMidway)
 	Crc8 crc1, crc2;
 	SIM_AddInterrupt([]{ CommInput_ResetPipeISR(); });
 	AddMessageInterrupts(crc1, {
-			3, // MESSAGE_TYPE_CONTROL
+			4, // MESSAGE_TYPE_CONTROL
 			0x12, 0x34, 0x56, 0x78, // time
 			122, // left
 			(uint8_t)-7, // right
 			5, // blade
 	});
 	AddMessageInterrupts(crc1, {
-			0, // MESSAGE_TYPE_NONE
+			1, // MESSAGE_TYPE_NONE
 	});
 	SIM_AddInterrupt([]{ CommInput_PutMessageByteISR(3); }); // Start a new message.
 	SIM_AddInterrupt([]{ CommInput_ResetPipeISR(); });
 	AddMessageInterrupts(crc2, {
-			1, // MESSAGE_TYPE_VERSION
+			2, // MESSAGE_TYPE_VERSION
 			0x9A, 0xBC, 0xDE, 0xF0, // id
 			0x11, 0x22, 0x33, 0x44, // version
 	});
 	AddMessageInterrupts(crc2, {
-			2, // MESSAGE_TYPE_SYNC
+			3, // MESSAGE_TYPE_SYNC
 			0x13, 0x9B, 0x13, 0x9B, // time
 	});
 	// Tell the input thread to stop.
@@ -198,7 +198,7 @@ TEST_CASE(CommInput_OverflowBuffer)
 	SIM_AddInterrupt([&message_count] {
 		Crc8 crc;
 		std::vector<uint8_t> general_message = {
-				3, // MESSAGE_TYPE_CONTROL
+				4, // MESSAGE_TYPE_CONTROL
 				0x12, 0x34, 0x56, 0x78, // time
 				122, // left
 				(uint8_t)-7, // right
@@ -223,7 +223,7 @@ TEST_CASE(CommInput_OverflowBuffer)
 	SIM_AddInterrupt([]{ CommInput_ResetPipeISR(); });
 	Crc8 crc2;
 	AddMessageInterrupts(crc2, {
-			3, // MESSAGE_TYPE_CONTROL
+			4, // MESSAGE_TYPE_CONTROL
 			0x12, 0x34, 0x56, 0x78, // time
 			122, // left
 			(uint8_t)-7, // right

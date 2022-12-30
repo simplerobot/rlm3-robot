@@ -3,7 +3,7 @@
 #include "CommInput.hpp"
 
 
-#ifdef MOCK
+#ifdef MOCK_COMMS
 // There has got to be a better way to add mock stubs for testing.
 extern bool CommInput_PutMessageByteISR_MOCK(uint8_t byte);
 extern void CommInput_ResetPipeISR_MOCK();
@@ -53,6 +53,7 @@ extern void RLM3_WIFI_Receive_Callback(size_t link_id, uint8_t data)
 	if (!CommInput_PutMessageByteISR(data))
 	{
 		g_active_link = INVALID_LINK;
+		CommInput_ResetPipeISR();
 		// TODO: Tell CommOutput to close this link.
 		return;
 	}
@@ -76,6 +77,7 @@ extern void RLM3_WIFI_NetworkDisconnect_Callback(size_t link_id, bool local_conn
 	if (g_active_link == link_id)
 	{
 		g_active_link = INVALID_LINK;
+		CommInput_ResetPipeISR();
 	}
 }
 
