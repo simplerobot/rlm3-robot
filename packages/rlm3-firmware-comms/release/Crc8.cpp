@@ -21,6 +21,13 @@ void Crc8::add(uint8_t data)
 	m_state = CRC_TABLE[((m_state >> 4) ^ (data >> 0)) & 0x0F] ^ (m_state << 4);
 }
 
+void Crc8::add(const void* raw_data, size_t size)
+{
+	const uint8_t* data = (const uint8_t*)raw_data;
+	for (size_t i = 0; i < size; i++)
+		add(data[i]);
+}
+
 uint8_t Crc8::get() const
 {
 	return m_state;

@@ -9,6 +9,7 @@ extern "C" {
 
 
 #define RLM3_WIFI_LINK_COUNT (5)
+#define RLM3_WIFI_INVALID_LINK ((size_t)-1)
 
 
 extern bool RLM3_WIFI_Init();

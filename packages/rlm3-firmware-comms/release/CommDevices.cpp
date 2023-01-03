@@ -4,22 +4,27 @@
 
 
 #ifdef MOCK_COMMS
-// There has got to be a better way to add mock stubs for testing.
-extern bool CommInput_PutMessageByteISR_MOCK(uint8_t byte);
-extern void CommInput_ResetPipeISR_MOCK();
-#define CommInput_PutMessageByteISR CommInput_PutMessageByteISR_MOCK
-#define CommInput_ResetPipeISR CommInput_ResetPipeISR_MOCK
+	// There has got to be a better way to add mock stubs for testing.
+
+	extern bool CommInput_PutMessageByteISR_MOCK(uint8_t byte);
+	extern void CommInput_ResetPipeISR_MOCK();
+	#define CommInput_PutMessageByteISR CommInput_PutMessageByteISR_MOCK
+	#define CommInput_ResetPipeISR CommInput_ResetPipeISR_MOCK
+
+	extern void CommOutput_OpenConnectionISR_MOCK(size_t link_id);
+	extern void CommOutput_CloseConnectionISR_MOCK(size_t link_id);
+	#define CommOutput_OpenConnectionISR CommOutput_OpenConnectionISR_MOCK
+	#define CommOutput_CloseConnectionISR CommOutput_CloseConnectionISR_MOCK
+
 #endif
 
-
-static constexpr size_t INVALID_LINK = -1;
 
 static volatile size_t g_active_link;
 
 
 extern bool CommDevices_Init()
 {
-	g_active_link = INVALID_LINK;
+	g_active_link = RLM3_WIFI_INVALID_LINK;
 
 	if (!RLM3_WIFI_Init())
 	{
@@ -46,15 +51,15 @@ extern void RLM3_WIFI_Receive_Callback(size_t link_id, uint8_t data)
 {
 	if (link_id != g_active_link)
 	{
-		// TODO: Tell CommOutput to close this link.
+		CommOutput_CloseConnectionISR(link_id);
 		return;
 	}
 
 	if (!CommInput_PutMessageByteISR(data))
 	{
-		g_active_link = INVALID_LINK;
+		g_active_link = RLM3_WIFI_INVALID_LINK;
 		CommInput_ResetPipeISR();
-		// TODO: Tell CommOutput to close this link.
+		CommOutput_CloseConnectionISR(link_id);
 		return;
 	}
 
@@ -63,20 +68,21 @@ extern void RLM3_WIFI_Receive_Callback(size_t link_id, uint8_t data)
 
 extern void RLM3_WIFI_NetworkConnect_Callback(size_t link_id, bool local_connection)
 {
-	if (g_active_link != INVALID_LINK)
+	if (g_active_link != RLM3_WIFI_INVALID_LINK)
 	{
-		// TODO: Tell CommOutput to close this link.
+		CommOutput_CloseConnectionISR(g_active_link);
 	}
 
 	g_active_link = link_id;
 	CommInput_ResetPipeISR();
+	CommOutput_OpenConnectionISR(link_id);
 }
 
 extern void RLM3_WIFI_NetworkDisconnect_Callback(size_t link_id, bool local_connection)
 {
 	if (g_active_link == link_id)
 	{
-		g_active_link = INVALID_LINK;
+		g_active_link = RLM3_WIFI_INVALID_LINK;
 		CommInput_ResetPipeISR();
 	}
 }

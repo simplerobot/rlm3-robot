@@ -146,9 +146,13 @@ extern bool CommInput_PutMessageByteISR(uint8_t byte)
 		}
 	}
 
+	// We just added one byte of the message.
+	g_current_message_size_remaining--;
+
 	// If this is the last byte of a message, publish it to the task.
-	if (--g_current_message_size_remaining == 0)
+	if (g_current_message_size_remaining == 0)
 	{
+		// Verify the CRC.
 		if (byte != g_crc.get())
 		{
 			LOG_ERROR("Invalid checksum %d %d", byte, g_crc.get());

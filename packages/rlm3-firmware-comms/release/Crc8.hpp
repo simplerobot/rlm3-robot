@@ -12,6 +12,8 @@ public:
 	void add(uint8_t data);
 	uint8_t get() const;
 
+	void add(const void* data, size_t size);
+
 private:
 	uint8_t m_state = 0;
 };

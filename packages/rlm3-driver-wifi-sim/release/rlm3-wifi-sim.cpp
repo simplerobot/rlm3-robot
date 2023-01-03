@@ -192,7 +192,8 @@ extern bool RLM3_WIFI_Transmit(size_t link_id, const uint8_t* data, size_t size)
 		uint8_t expected_transmit_byte = s.transmit_queue.front();
 		s.transmit_queue.pop();
 		uint8_t actual_transmit_byte = data[i];
-		ASSERT(actual_transmit_byte == expected_transmit_byte);
+		if (actual_transmit_byte != expected_transmit_byte)
+			FAIL("Expected transmit of '%c' (0x%02x) but got '%c' (0x%02x)", (expected_transmit_byte >= ' ' && expected_transmit_byte <= '~') ? expected_transmit_byte : '?', expected_transmit_byte, (actual_transmit_byte >= ' ' && actual_transmit_byte <= '~') ? actual_transmit_byte : '?', actual_transmit_byte);
 	}
 	return true;
 }
@@ -244,6 +245,23 @@ extern __attribute__((weak)) void RLM3_WIFI_NetworkDisconnect_Callback(size_t li
 }
 
 
+extern void SIM_WIFI_NetworkConnect()
+{
+	g_is_active = true;
+	g_is_network_connected = true;
+}
+
+extern void SIM_WIFI_ServerConnect(size_t link_id)
+{
+	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
+	auto& s = g_server_settings[link_id];
+
+	g_is_active = true;
+	g_is_network_connected = true;
+	s.is_connected = true;
+	s.is_local_connection = false;
+}
+
 extern void SIM_WIFI_InitFailure()
 {
 	g_fail_init = true;
@@ -290,6 +308,21 @@ extern void SIM_WIFI_Transmit(size_t link_id, const char* expected)
 		s.transmit_queue.push(*cursor);
 }
 
+extern void SIM_WIFI_TransmitByte(size_t link_id, uint8_t byte)
+{
+	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
+	auto& s = g_server_settings[link_id];
+	s.transmit_queue.push(byte);
+}
+
+extern void SIM_WIFI_TransmitBytes(size_t link_id, const uint8_t* bytes, size_t size)
+{
+	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
+	auto& s = g_server_settings[link_id];
+	for (size_t i = 0; i < size; i++)
+		s.transmit_queue.push(bytes[i]);
+}
+
 extern void SIM_WIFI_Receive(size_t link_id, const char* data)
 {
 	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
@@ -316,6 +349,12 @@ extern void SIM_WIFI_ReceiveByte(size_t link_id, uint8_t byte)
 		ASSERT(s.is_connected);
 		RLM3_WIFI_Receive_Callback(link_id, byte);
 	});
+}
+
+extern void SIM_WIFI_ReceiveBytes(size_t link_id, const uint8_t* byte, size_t size)
+{
+	for (size_t i = 0; i < size; i++)
+		SIM_WIFI_ReceiveByte(link_id, byte[i]);
 }
 
 extern void SIM_WIFI_Connect(size_t link_id)
