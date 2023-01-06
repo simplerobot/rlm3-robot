@@ -36,7 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-extern void RLM3_Main();
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/

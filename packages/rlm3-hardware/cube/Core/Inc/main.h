@@ -127,6 +127,7 @@ void Error_Handler(void);
 #define GPS_PULSE_GPIO_Port GPIOG
 #define WIFI_RESET_Pin GPIO_PIN_13
 #define WIFI_RESET_GPIO_Port GPIOG
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

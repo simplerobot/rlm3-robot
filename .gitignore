@@ -4,3 +4,11 @@ build/
 .project
 .settings/
 
+packages/rlm3-hardware/cube/Drivers/CMSIS/DSP/
+packages/rlm3-hardware/cube/Drivers/CMSIS/Device/ST/STM32F4xx/Include/
+packages/rlm3-hardware/cube/Drivers/CMSIS/Device/ST/STM32F4xx/Include/
+packages/rlm3-hardware/cube/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/
+packages/rlm3-hardware/cube/Drivers/CMSIS/Lib/
+packages/rlm3-hardware/cube/Drivers/CMSIS/NN/
+
+

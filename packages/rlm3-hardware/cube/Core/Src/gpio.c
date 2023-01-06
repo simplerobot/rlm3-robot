@@ -77,8 +77,10 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOD, CAMERA_RESET_Pin|INERTIA_CHIP_SELECT_Pin|STATUS_LIGHT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, POWER_ENABLE_Pin|MOTOR_ENABLE_Pin|WIFI_ENABLE_Pin|WIFI_BOOT_MODE_Pin
-                          |WIFI_RESET_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(POWER_ENABLE_GPIO_Port, POWER_ENABLE_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOG, MOTOR_ENABLE_Pin|WIFI_ENABLE_Pin|WIFI_BOOT_MODE_Pin|WIFI_RESET_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = CAMERA_POWER_DOWN_Pin;

@@ -12,7 +12,7 @@ LOGGER_ZONE(TEST);
 static void ITM_SendString(const char* str);
 
 
-extern void RLM3_Main()
+extern void RLM3_Main_CB()
 {
 	LOG_ALWAYS("Running tests...");
 	LOG_ALWAYS("Passed!");
