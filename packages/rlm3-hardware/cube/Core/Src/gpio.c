@@ -38,19 +38,12 @@
         * Output
         * EVENT_OUT
         * EXTI
-     PF8   ------> S_TIM13_CH1
-     PF9   ------> S_TIM14_CH1
-     PA7   ------> S_TIM3_CH2
-     PB0   ------> S_TIM3_CH3
-     PB1   ------> S_TIM3_CH4
      PB10   ------> USART3_TX
      PB11   ------> USART3_RX
      PB13   ------> SPI2_SCK
      PB14   ------> SPI2_MISO
      PB15   ------> SPI2_MOSI
      PA8   ------> RCC_MCO_1
-     PA9   ------> S_TIM1_CH2
-     PA10   ------> S_TIM1_CH3
 */
 void MX_GPIO_Init(void)
 {
@@ -77,10 +70,10 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOD, CAMERA_RESET_Pin|INERTIA_CHIP_SELECT_Pin|STATUS_LIGHT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(POWER_ENABLE_GPIO_Port, POWER_ENABLE_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOG, POWER_ENABLE_Pin|MOTOR_ENABLE_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, MOTOR_ENABLE_Pin|WIFI_ENABLE_Pin|WIFI_BOOT_MODE_Pin|WIFI_RESET_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, WIFI_ENABLE_Pin|WIFI_BOOT_MODE_Pin|WIFI_RESET_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = CAMERA_POWER_DOWN_Pin;
@@ -94,38 +87,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = BLADE_MOTOR_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF9_TIM13;
-  HAL_GPIO_Init(BLADE_MOTOR_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = BLADE_BRAKE_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF9_TIM14;
-  HAL_GPIO_Init(BLADE_BRAKE_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = CAMERA_LIGHT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
-  HAL_GPIO_Init(CAMERA_LIGHT_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PBPin PBPin */
-  GPIO_InitStruct.Pin = LEFT_BACKWARD_Pin|LEFT_FORWARD_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin */
   GPIO_InitStruct.Pin = TEST_TX_Pin|TEST_RX_Pin;
@@ -173,14 +134,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
   HAL_GPIO_Init(CAMERA_CLOCK_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PAPin PAPin */
-  GPIO_InitStruct.Pin = RIGHT_FORWARD_Pin|RIGHT_BACKWARD_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF1_TIM1;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = GPS_PULSE_Pin;

@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -85,18 +84,17 @@ int main(void)
 
   /* USER CODE END Init */
 
+  /* Configure the system clock */
+  SystemClock_Config();
+
   /* USER CODE BEGIN SysInit */
 
-  SystemClock_Config();
   HAL_Delay(100);
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
-
-  MX_FMC_Init();
 
   /* USER CODE END 2 */
 
