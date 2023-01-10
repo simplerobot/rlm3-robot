@@ -1,6 +1,7 @@
 #include "Test.h"
 #include "rlm-string.h"
 #include "logger.h"
+#include <setjmp.h>
 #include "main.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -8,11 +9,9 @@
 
 typedef struct TestContext
 {
-	const TestCaseInfo* test;
-	TaskHandle_t child_thread;
-	TaskHandle_t parent_thread;
-	volatile bool done;
-	volatile bool result;
+	jmp_buf jump;
+	TaskHandle_t task;
+	bool failed;
 } TestContext;
 
 
@@ -74,90 +73,64 @@ static void RunHelpers(TestHelperType type)
 	}
 }
 
-static __attribute__ ((noreturn)) void ThreadTestCaseFinish(bool result)
-{
-	g_test_context->result = result;
-	g_test_context->done = true;
-	xTaskNotifyGive(g_test_context->parent_thread);
-	vTaskDelete(g_test_context->child_thread);
-	vTaskDelete(NULL);
-	while (true)
-		;
-}
-
-static __attribute__ ((noreturn)) void ThreadTestCaseRun(void* param)
-{
-	RunHelpers(TEST_HELPER_START);
-
-	(*g_test_context->test->test)();
-
-	RunHelpers(TEST_HELPER_FINISH);
-
-	ThreadTestCaseFinish(true);
-}
-
 extern void NotifyAssertFailed(const char* file, long line, const char* function, const char* message, ...)
 {
+	const char* error = "assert failed";
+
 	if (g_test_context == NULL)
 	{
-		RLM_FnFormat(TestOutput, NULL, "ASSERT FAILED OUTSIDE TESTS\n");
+		error = "assert failed outside tests";
 	}
-	else if (g_test_context->child_thread == NULL)
+	else if (__get_IPSR() != 0U)
 	{
-		RLM_FnFormat(TestOutput, NULL, "ASSERT FAILED IN PARENT THREAD\n");
+		error = "assert failed in interrupt";
 	}
-	else if (g_test_context->child_thread != xTaskGetCurrentTaskHandle())
+	else if (g_test_context->task != xTaskGetCurrentTaskHandle())
 	{
-		RLM_FnFormat(TestOutput, NULL, "ASSERT FAILED IN SECONDARY THREAD\n");
+		error = "assert failed in secondary task";
 	}
 
 	va_list args;
 	va_start(args, message);
-	RLM_FnFormat(TestOutput, NULL, "%s:%ld:1: assert: \u2018", file, line);
+	RLM_FnFormat(TestOutput, NULL, "%s:%ld:1: %s: \u2018", file, line, error);
 	RLM_FnVFormat(TestOutput, NULL, message, args);
 	RLM_FnFormat(TestOutput, NULL, "\u2018 in function: %s\n", function);
 	va_end(args);
 
-	ThreadTestCaseFinish(false);
+	if (g_test_context != NULL)
+		g_test_context->failed = true;
+
+	if (g_test_context != NULL && __get_IPSR() == 0U && g_test_context->task == xTaskGetCurrentTaskHandle())
+		longjmp(g_test_context->jump, 1);
 }
 
 extern bool RunTestCase(const TestCaseInfo* info)
 {
-	// Save the previous test context.
+	// Save the old context.
 	TestContext* previous_context = g_test_context;
 
-	// Create a new test context.
-	TestContext current_context = {};
-	current_context.test = info;
-	current_context.child_thread = NULL;
-	current_context.parent_thread = xTaskGetCurrentTaskHandle();
-	current_context.done = false;
-	current_context.result = false;
+	// Setup a new context.
+	TestContext current_context;
+	current_context.failed = false;
+	current_context.task = xTaskGetCurrentTaskHandle();
 	g_test_context = &current_context;
+	if (setjmp(current_context.jump) != 0)
+	{
+		RunHelpers(TEST_HELPER_TEARDOWN);
+		g_test_context = previous_context;
+		return false;
+	}
 
 	RunHelpers(TEST_HELPER_SETUP);
+	RunHelpers(TEST_HELPER_START);
 
-	// Run the test on a separate thread.
-	BaseType_t result = xTaskCreate(ThreadTestCaseRun, "test", 256, NULL, 24, &current_context.child_thread);
-	if (result == pdPASS)
-	{
-		// Wait for the test to finish.
-		while (!current_context.done)
-			ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-		current_context.child_thread = NULL;
-	}
-	else
-		TestFormat("Error: unable to create test thread %d.\n", result);
+	(*info->test)();
 
+	RunHelpers(TEST_HELPER_FINISH);
 	RunHelpers(TEST_HELPER_TEARDOWN);
 
-	// Restore the previous test context.
 	g_test_context = previous_context;
-
-	// Wait just a moment for the idle task to cleanup the thread we created.
-	vTaskDelay(1);
-
-	return current_context.result;
+	return !current_context.failed;
 }
 
 extern void RLM3_Main_CB()

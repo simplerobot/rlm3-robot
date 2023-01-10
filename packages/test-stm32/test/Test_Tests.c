@@ -53,13 +53,13 @@ TEST_CASE(Test_RunTestCase_Fail)
 static void FailTaskTestFn(void* param)
 {
 	ASSERT(false);
+	vTaskDelete(NULL);
 }
 
 static void FailThreadTestFn()
 {
 	xTaskCreate(FailTaskTestFn, "test", 256, NULL, 24, NULL);
-	while (true)
-		;
+	vTaskDelay(2);
 }
 
 TEST_CASE(Test_RunTestCase_FailInSecondaryThread)
