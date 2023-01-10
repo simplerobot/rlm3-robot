@@ -1,7 +1,8 @@
 #include "Test.hpp"
-#include "rlm3-bytes.h"
 #include <cstring>
 #include <cmath>
+
+#include "../release/rlm-bytes.h"
 
 
 TEST_CASE(hton_u16_HappyCase)

@@ -1,4 +1,5 @@
-#include "rlm3-string.h"
+#include "rlm-string.h"
+
 #include "math.h"
 
 
@@ -25,18 +26,18 @@ static const char* SafePointerHandling(const char* string)
 	return string;
 }
 
-static void WriteChar(RLM3_Format_Fn fn, void* data, char c)
+static void WriteChar(RLM_Format_Fn fn, void* data, char c)
 {
 	fn(data, c);
 }
 
-static void WriteString(RLM3_Format_Fn fn, void* data, const char* string)
+static void WriteString(RLM_Format_Fn fn, void* data, const char* string)
 {
 	for (const char* s = SafePointerHandling(string); *s != 0; s++)
 		WriteChar(fn, data, *s);
 }
 
-static void WriteHexDigit(RLM3_Format_Fn fn, void* data, bool upper, uint32_t x)
+static void WriteHexDigit(RLM_Format_Fn fn, void* data, bool upper, uint32_t x)
 {
 	char c = '?';
 	if (0 <= x && x <= 9)
@@ -46,7 +47,7 @@ static void WriteHexDigit(RLM3_Format_Fn fn, void* data, bool upper, uint32_t x)
 	WriteChar(fn, data, c);
 }
 
-static void WriteCharSafe(RLM3_Format_Fn fn, void* data, char c)
+static void WriteCharSafe(RLM_Format_Fn fn, void* data, char c)
 {
 	if (c == '\\')
 	{
@@ -76,13 +77,13 @@ static void WriteCharSafe(RLM3_Format_Fn fn, void* data, char c)
 	}
 }
 
-static void WriteStringSafe(RLM3_Format_Fn fn, void* data, const char* string)
+static void WriteStringSafe(RLM_Format_Fn fn, void* data, const char* string)
 {
 	for (const char* s = SafePointerHandling(string); *s != 0; s++)
 		WriteCharSafe(fn, data, *s);
 }
 
-static void WriteUInt(RLM3_Format_Fn fn, void* data, uint32_t value)
+static void WriteUInt(RLM_Format_Fn fn, void* data, uint32_t value)
 {
 	char buffer_data[10];
 	size_t buffer_size = 0;
@@ -92,14 +93,14 @@ static void WriteUInt(RLM3_Format_Fn fn, void* data, uint32_t value)
 		WriteChar(fn, data, buffer_data[buffer_size - i - 1]);
 }
 
-static void WriteInt(RLM3_Format_Fn fn, void* data, int32_t value)
+static void WriteInt(RLM_Format_Fn fn, void* data, int32_t value)
 {
 	if (value < 0)
 		WriteChar(fn, data, '-');
 	WriteUInt(fn, data, (value < 0) ? -value : value);
 }
 
-static void WriteHex(RLM3_Format_Fn fn, void* data, bool upper, uint32_t value)
+static void WriteHex(RLM_Format_Fn fn, void* data, bool upper, uint32_t value)
 {
 	size_t i = 1;
 	while (i < 8 && (value >> (4 * i)) != 0)
@@ -113,7 +114,7 @@ static inline int32_t quick_floor(double value)
 	return (int32_t)value - ((value < 0) ? 1 : 0);
 }
 
-static void WriteFloat(RLM3_Format_Fn fn, void* data, double value)
+static void WriteFloat(RLM_Format_Fn fn, void* data, double value)
 {
 	if (signbit(value))
 	{
@@ -193,7 +194,7 @@ static void WriteFloat(RLM3_Format_Fn fn, void* data, double value)
 	}
 }
 
-extern void RLM3_FnVFormat(RLM3_Format_Fn fn, void* data, const char* format, va_list args)
+extern void RLM_FnVFormat(RLM_Format_Fn fn, void* data, const char* format, va_list args)
 {
 	format = SafePointerHandling(format);
 	while (*format != 0)
@@ -235,11 +236,11 @@ extern void RLM3_FnVFormat(RLM3_Format_Fn fn, void* data, const char* format, va
 	}
 }
 
-extern void RLM3_FnFormat(RLM3_Format_Fn fn, void* data, const char* format, ...)
+extern void RLM_FnFormat(RLM_Format_Fn fn, void* data, const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	RLM3_FnVFormat(fn, data, format, args);
+	RLM_FnVFormat(fn, data, format, args);
 	va_end(args);
 }
 
@@ -258,18 +259,18 @@ static void FormatBufferFunction(void* raw_data, char c)
 	data->cursor++;
 }
 
-extern size_t RLM3_Format(char* buffer, size_t size, const char* format, ...)
+extern size_t RLM_Format(char* buffer, size_t size, const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	size_t result = RLM3_VFormat(buffer, size, format, args);
+	size_t result = RLM_VFormat(buffer, size, format, args);
 	va_end(args);
 	return result;
 }
 
-extern size_t RLM3_VFormat(char* buffer, size_t size, const char* format, va_list args)
+extern size_t RLM_VFormat(char* buffer, size_t size, const char* format, va_list args)
 {
-	size_t cursor = RLM3_VFormatNoNul(buffer, size, format, args);
+	size_t cursor = RLM_VFormatNoNul(buffer, size, format, args);
 	if (cursor < size)
 		buffer[cursor] = 0;
 	else if (size > 0)
@@ -277,23 +278,23 @@ extern size_t RLM3_VFormat(char* buffer, size_t size, const char* format, va_lis
 	return cursor + 1;
 }
 
-extern size_t RLM3_FormatNoNul(char* buffer, size_t size, const char* format, ...)
+extern size_t RLM_FormatNoNul(char* buffer, size_t size, const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	size_t result = RLM3_VFormatNoNul(buffer, size, format, args);
+	size_t result = RLM_VFormatNoNul(buffer, size, format, args);
 	va_end(args);
 	return result;
 }
 
-extern size_t RLM3_VFormatNoNul(char* buffer, size_t size, const char* format, va_list args)
+extern size_t RLM_VFormatNoNul(char* buffer, size_t size, const char* format, va_list args)
 {
 	FormatBufferData data = { 0 };
 	data.buffer = buffer;
 	data.size = size;
 	data.cursor = 0;
 
-	RLM3_FnVFormat(FormatBufferFunction, &data, format, args);
+	RLM_FnVFormat(FormatBufferFunction, &data, format, args);
 
 	return data.cursor;
 }

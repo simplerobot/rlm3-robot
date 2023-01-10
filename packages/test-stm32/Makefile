@@ -1,8 +1,8 @@
 DEPS += build-scripts
 DEPS += hw-test-agent
-DEPS += rlm3-hardware
-DEPS += rlm3-base
+DEPS += rlm-base
 DEPS += logger
+DEPS += rlm3-hardware
 include ../build-scripts/release/include.make
 
 TOOLCHAIN_PATH = /opt/gcc-arm-none-eabi-7-2018-q2-update/bin/arm-none-eabi-
@@ -13,12 +13,12 @@ HX = $(TOOLCHAIN_PATH)objcopy -O ihex
 BN = $(TOOLCHAIN_PATH)objcopy -O binary -S
 
 MCU = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard 
-OPTIONS = -fdata-sections -ffunction-sections -fexceptions -Wall -Werror -DUSE_FULL_ASSERT=1
+OPTIONS = -fdata-sections -ffunction-sections -fno-exceptions -Wall -Werror -DUSE_FULL_ASSERT=1
 
 LIBRARIES = \
 	-lc \
 	-lm \
-	-lstdc++
+	-lnosys
 
 DEFINES = \
 	-DUSE_HAL_DRIVER \
@@ -28,7 +28,7 @@ DEFINES = \
 TEST_BUILD_DIR = $(BUILD_DIR)/test
 
 TEST_SOURCE_DIR = test
-TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(TEST_SOURCE_DIR) $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM3_BASE_DIR) $(PKG_LOGGER_DIR)
+TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(TEST_SOURCE_DIR) $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM_BASE_DIR) $(PKG_LOGGER_DIR)
 TEST_SOURCE_FILES = $(notdir $(wildcard $(TEST_SOURCE_DIRS:%=%/*.c) $(TEST_SOURCE_DIRS:%=%/*.cpp) $(TEST_SOURCE_DIRS:%=%/*.s)))
 TEST_O_FILES = $(addsuffix .o,$(basename $(TEST_SOURCE_FILES)))
 TEST_LD_FILE = $(wildcard $(PKG_RLM3_HARDWARE_DIR)/*.ld)
