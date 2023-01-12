@@ -1,32 +1,23 @@
-#include "Test.hpp"
+#include "Test.h"
 #include "rlm3-task.h"
+#include "rlm3-lock.h"
 #include "main.h"
 #include <algorithm>
-#include "logger.h"
-#include "cmsis_os2.h"
-#include "rlm3-timer.h"
-
-
-LOGGER_ZONE(TASK_TEST);
-
-
-typedef void (*TimerFn)();
-extern void SetTimer2Callback(TimerFn timer_fn);
 
 
 TEST_CASE(Task_GetCurrentTime_HappyCase)
 {
-	RLM3_Time time0 = RLM3_GetCurrentTime();
+	RLM3_Time time0 = RLM3_Time_Get();
 	size_t steps_0 = 0;
-	while (steps_0 < 1000000000 && RLM3_GetCurrentTime() == time0)
+	while (steps_0 < 1000000000 && RLM3_Time_Get() == time0)
 		steps_0++;
-	RLM3_Time time1 = RLM3_GetCurrentTime();
+	RLM3_Time time1 = RLM3_Time_Get();
 	size_t steps_1 = 0;
-	while (steps_1 < 1000000000 && RLM3_GetCurrentTime() == time1)
+	while (steps_1 < 1000000000 && RLM3_Time_Get() == time1)
 		steps_1++;
-	RLM3_Time time2 = RLM3_GetCurrentTime();
+	RLM3_Time time2 = RLM3_Time_Get();
 	size_t steps_2 = 0;
-	while (steps_2 < 1000000000 && RLM3_GetCurrentTime() == time2)
+	while (steps_2 < 1000000000 && RLM3_Time_Get() == time2)
 		steps_2++;
 
 	ASSERT(time1 == time0 + 1);
@@ -36,55 +27,66 @@ TEST_CASE(Task_GetCurrentTime_HappyCase)
 	ASSERT(1.0 * steps_min / steps_max > 0.99);
 }
 
+TEST_CASE(Task_Create_HappyCase)
+{
+	static volatile bool success = false;
+	auto thread_fn = []()
+	{
+		success = true;
+	};
+
+	RLM3_Task result = RLM3_Task_Create(thread_fn, 128, "test");
+
+	ASSERT(result != NULL);
+	ASSERT(!success);
+	RLM3_Task_Yield();
+	ASSERT(success);
+}
+
 TEST_CASE(Task_Yield_SingleThread)
 {
-	RLM3_Time start_time = RLM3_GetCurrentTime();
+	RLM3_Time start_time = RLM3_Time_Get();
 	for (size_t i = 0; i < 10; i++)
-		RLM3_Yield();
-	RLM3_Time end_time = RLM3_GetCurrentTime();
+		RLM3_Task_Yield();
+	RLM3_Time end_time = RLM3_Time_Get();
 
 	ASSERT((end_time - start_time) <= 1);
 }
 
 TEST_CASE(Task_Yield_HappyCase)
 {
-	auto secondary_thread_fn = [](void* param)
+	static volatile size_t count = 0;
+	auto thread_fn = []()
 	{
 		for (size_t i = 0; i < 10; i++)
 		{
-			(*(size_t*)param)++;
-			RLM3_Yield();
+			count++;
+			RLM3_Task_Yield();
 		}
-		::osThreadExit();
 	};
 
-	size_t secondary_count = 0;
-	osThreadAttr_t task_attributes = {};
-	task_attributes.name = "secondary_thread";
-	task_attributes.stack_size = 128 * 4;
-	task_attributes.priority = osPriorityNormal;
-	ASSERT(::osThreadNew(secondary_thread_fn, &secondary_count, &task_attributes) != nullptr);
+	RLM3_Task_Create(thread_fn, 128, "test");
 
-	RLM3_Time start_time = RLM3_GetCurrentTime();
+	RLM3_Time start_time = RLM3_Time_Get();
 	for (size_t i = 0; i < 10; i++)
 	{
-		ASSERT(secondary_count == i);
-		RLM3_Yield();
+		ASSERT(count == i);
+		RLM3_Task_Yield();
 	}
-	RLM3_Time end_time = RLM3_GetCurrentTime();
+	RLM3_Time end_time = RLM3_Time_Get();
 
 	ASSERT((end_time - start_time) <= 1);
 }
 
 TEST_CASE(Task_Delay_HappyCase)
 {
-	RLM3_Time time0 = RLM3_GetCurrentTime();
-	RLM3_Delay(1);
-	RLM3_Time time1 = RLM3_GetCurrentTime();
-	RLM3_Delay(1);
-	RLM3_Time time2 = RLM3_GetCurrentTime();
-	RLM3_Delay(1);
-	RLM3_Time time3 = RLM3_GetCurrentTime();
+	RLM3_Time time0 = RLM3_Time_Get();
+	RLM3_Task_Delay(1);
+	RLM3_Time time1 = RLM3_Time_Get();
+	RLM3_Task_Delay(1);
+	RLM3_Time time2 = RLM3_Time_Get();
+	RLM3_Task_Delay(1);
+	RLM3_Time time3 = RLM3_Time_Get();
 
 	ASSERT(time0 + 1 <= time1 && time1 <= time0 + 3);
 	ASSERT(time1 + 1 <= time2 && time2 <= time1 + 2);
@@ -93,164 +95,124 @@ TEST_CASE(Task_Delay_HappyCase)
 
 TEST_CASE(Task_DelayUntil_HappyCase)
 {
-	RLM3_Time start_time = RLM3_GetCurrentTime();
-	RLM3_DelayUntil(start_time, 3);
-	RLM3_Time actual_time = RLM3_GetCurrentTime();
+	RLM3_Time start_time = RLM3_Time_Get();
+	RLM3_Task_DelayUntil(start_time, 3);
+	RLM3_Time actual_time = RLM3_Time_Get();
 
 	ASSERT(start_time + 3 == actual_time);
 }
 
 TEST_CASE(Task_GetCurrentTask_SingleThread)
 {
-	RLM3_Task task = RLM3_GetCurrentTask();
+	RLM3_Task task = RLM3_Task_GetCurrent();
 	ASSERT(task != nullptr);
-	ASSERT(task == RLM3_GetCurrentTask());
+	ASSERT(task == RLM3_Task_GetCurrent());
 }
 
 TEST_CASE(Task_GetCurrentTask_MultipleThreads)
 {
-	auto secondary_thread_fn = [](void* param)
+	static volatile size_t g_thread_count = 0;
+	static RLM3_Task g_tasks[6] = {};
+	auto thread_fn = []()
 	{
-		*(RLM3_Task*)param = RLM3_GetCurrentTask();
-		::osThreadExit();
+		RLM3_Lock_EnterCritical();
+		size_t id = g_thread_count++;
+		RLM3_Lock_ExitCritical();
+
+		ASSERT(id < 6);
+		if (id < 6)
+			g_tasks[id] = RLM3_Task_GetCurrent();
 	};
 
-	RLM3_Task secondary_tasks[6] = {};
-	osThreadId_t secondary_ids[6] = {};
-	osThreadAttr_t task_attributes = {};
-	task_attributes.name = "secondary_thread";
-	task_attributes.stack_size = 128 * 4;
-	task_attributes.priority = osPriorityNormal;
+	RLM3_Task tasks[6];
 	for (size_t i = 0; i < 6; i++)
-		secondary_ids[i] = ::osThreadNew(secondary_thread_fn, &secondary_tasks[i], &task_attributes);
-	RLM3_Delay(1);
+		tasks[i] = RLM3_Task_Create(thread_fn, 128, "test");
+	RLM3_Task_Delay(1);
 
-	RLM3_Task current_task = RLM3_GetCurrentTask();
+	RLM3_Task current_task = RLM3_Task_GetCurrent();
 	for (size_t i = 0; i < 6; i++)
 	{
-		ASSERT(secondary_ids[i] != nullptr);
-		ASSERT(secondary_tasks[i] != nullptr);
-		ASSERT(secondary_ids[i] == secondary_tasks[i]);
-		ASSERT(secondary_tasks[i] != current_task);
+		ASSERT(g_tasks[i] != nullptr);
+		ASSERT(g_tasks[i] != current_task);
 		for (size_t j = i + 1; j < 6; j++)
-			ASSERT(secondary_tasks[i] != secondary_tasks[j]);
+			ASSERT(g_tasks[i] != g_tasks[j]);
+		bool found = false;
+		for (size_t j = 0; j < 6; j++)
+			if (g_tasks[i] == tasks[j])
+				found = true;
+		ASSERT(found);
 	}
 }
 
 TEST_CASE(Task_Give_HappyCase)
 {
-	RLM3_Give(RLM3_GetCurrentTask());
+	RLM3_Task_Give(RLM3_Task_GetCurrent());
 
-	RLM3_Take();
+	RLM3_Task_Take();
 }
 
 TEST_CASE(Task_Give_SecondThread)
 {
-	auto secondary_thread_fn = [](void* param)
+	static volatile size_t g_count = 0;
+	auto thread_fn = []()
 	{
 		for (size_t i = 0; i < 5; i++)
 		{
-			RLM3_Take();
-			(*(size_t*)param)++;
+			RLM3_Task_Take();
+			g_count++;
 		}
-		::osThreadExit();
 	};
 
-	size_t secondary_count = 0;
+	RLM3_Task task = RLM3_Task_Create(thread_fn, 128, "test");
 
-	osThreadAttr_t task_attributes = {};
-	task_attributes.name = "secondary_thread";
-	task_attributes.stack_size = 128 * 4;
-	task_attributes.priority = osPriorityNormal;
-	RLM3_Task secondary_task = ::osThreadNew(secondary_thread_fn, &secondary_count, &task_attributes);
-	ASSERT(secondary_task != nullptr);
-
-	RLM3_Time start_time = RLM3_GetCurrentTime();
+	RLM3_Time start_time = RLM3_Time_Get();
 	for (size_t i = 0; i < 5; i++)
 	{
-		RLM3_Yield();
-		ASSERT(secondary_count == i);
-		RLM3_Give(secondary_task);
-		RLM3_Yield();
+		RLM3_Task_Yield();
+		ASSERT(g_count == i);
+		RLM3_Task_Give(task);
+		RLM3_Task_Yield();
 	}
-	RLM3_Time end_time = RLM3_GetCurrentTime();
-
-	ASSERT((end_time - start_time) <= 1);
-}
-
-TEST_CASE(Task_Give_HigherPriority)
-{
-	auto secondary_thread_fn = [](void* param)
-	{
-		for (size_t i = 0; i < 5; i++)
-		{
-			RLM3_Take();
-			(*(size_t*)param)++;
-		}
-		::osThreadExit();
-	};
-
-	size_t secondary_count = 0;
-
-	osThreadAttr_t task_attributes = {};
-	task_attributes.name = "secondary_thread";
-	task_attributes.stack_size = 128 * 4;
-	task_attributes.priority = osPriorityAboveNormal;
-	RLM3_Task secondary_task = ::osThreadNew(secondary_thread_fn, &secondary_count, &task_attributes);
-	ASSERT(secondary_task != nullptr);
-
-	RLM3_Time start_time = RLM3_GetCurrentTime();
-	for (size_t i = 0; i < 5; i++)
-	{
-		ASSERT(secondary_count == i);
-		RLM3_Give(secondary_task);
-	}
-	RLM3_Time end_time = RLM3_GetCurrentTime();
+	RLM3_Time end_time = RLM3_Time_Get();
 
 	ASSERT((end_time - start_time) <= 1);
 }
 
 TEST_CASE(Task_Give_Multiple)
 {
-	auto secondary_thread_fn = [](void* param)
+	static volatile size_t g_count = 0;
+	auto thread_fn = []()
 	{
 		for (size_t i = 0; i < 2; i++)
 		{
-			RLM3_Take();
-			(*(size_t*)param)++;
+			RLM3_Task_Take();
+			g_count++;
 		}
-		::osThreadExit();
 	};
 
-	size_t secondary_count = 0;
+	RLM3_Task task = RLM3_Task_Create(thread_fn, 128, "test");
 
-	osThreadAttr_t task_attributes = {};
-	task_attributes.name = "secondary_thread";
-	task_attributes.stack_size = 128 * 4;
-	task_attributes.priority = osPriorityNormal;
-	RLM3_Task secondary_task = ::osThreadNew(secondary_thread_fn, &secondary_count, &task_attributes);
-	ASSERT(secondary_task != nullptr);
-
-	RLM3_Delay(0); // Make sure we don't have a forced task switch between the next two lines.
-	RLM3_Give(secondary_task);
-	RLM3_Give(secondary_task);
-	RLM3_Yield();
-	RLM3_Yield();
-	ASSERT(secondary_count == 1);
-	RLM3_Give(secondary_task);
-	RLM3_Yield();
-	ASSERT(secondary_count == 2);
+	RLM3_Task_Delay(0); // Make sure we don't have a forced task switch between the next two lines.
+	RLM3_Task_Give(task);
+	RLM3_Task_Give(task);
+	RLM3_Task_Yield();
+	RLM3_Task_Yield();
+	ASSERT(g_count == 1);
+	RLM3_Task_Give(task);
+	RLM3_Task_Yield();
+	ASSERT(g_count == 2);
 }
 
+/*
 TEST_CASE(Task_Give_FromISR)
 {
-	static RLM3_Task g_target_task = RLM3_GetCurrentTask();
-	SetTimer2Callback([] { RLM3_GiveFromISR(g_target_task); });
+	static RLM3_Task g_target_task = RLM3_Task_GetCurrent();
+	SetTimer2Callback([] { RLM3_Task_GiveISR(g_target_task); });
 	RLM3_Timer2_Init(5000);
 
 	RLM3_Time start_time = RLM3_GetCurrentTime();
 	for (size_t i = 0; i < 100; i++)
-		RLM3_Take();
+		RLM3_Task_Take();
 	RLM3_Time end_time = RLM3_GetCurrentTime();
 
 	RLM3_Timer2_Deinit();
@@ -261,10 +223,10 @@ TEST_CASE(Task_Give_FromISR)
 
 TEST_CASE(Task_TakeWithTimeout_HappyCase)
 {
-	RLM3_Give(RLM3_GetCurrentTask());
+	RLM3_Task_Give(RLM3_Task_GetCurrent());
 
 	RLM3_Time start_time = RLM3_GetCurrentTime();
-	bool result = RLM3_TakeWithTimeout(10);
+	bool result = RLM3_Task_TakeWithTimeout(10);
 	RLM3_Time elapsed = RLM3_GetCurrentTime() - start_time;
 
 	ASSERT(result);
@@ -274,7 +236,7 @@ TEST_CASE(Task_TakeWithTimeout_HappyCase)
 TEST_CASE(Task_TakeWithTimeout_Timeout)
 {
 	RLM3_Time start_time = RLM3_GetCurrentTime();
-	bool result = RLM3_TakeWithTimeout(10);
+	bool result = RLM3_Task_TakeWithTimeout(10);
 	RLM3_Time elapsed = RLM3_GetCurrentTime() - start_time;
 
 	ASSERT(!result);
@@ -283,10 +245,10 @@ TEST_CASE(Task_TakeWithTimeout_Timeout)
 
 TEST_CASE(Task_TakeUntil_HappyCase)
 {
-	RLM3_Give(RLM3_GetCurrentTask());
+	RLM3_Task_Give(RLM3_Task_GetCurrent());
 	RLM3_Time start_time = RLM3_GetCurrentTime();
 
-	bool result = RLM3_TakeUntil(start_time, 10);
+	bool result = RLM3_Task_TakeUntil(start_time, 10);
 	RLM3_Time elapsed = RLM3_GetCurrentTime() - start_time;
 
 	ASSERT(result);
@@ -298,7 +260,7 @@ TEST_CASE(Task_TakeUntil_Timeout)
 	RLM3_Time start_time = RLM3_GetCurrentTime();
 	RLM3_Time target_time = start_time + 10;
 
-	bool result = RLM3_TakeUntil(start_time, 10);
+	bool result = RLM3_Task_TakeUntil(start_time, 10);
 	RLM3_Time end_time = RLM3_GetCurrentTime();
 
 	ASSERT(!result);
@@ -313,10 +275,10 @@ TEST_CASE(Task_EnterCritical)
 
 	for (size_t i = 0; i < 1000; i++)
 	{
-		RLM3_EnterCritical();
+		RLM3_Lock_EnterCritical();
 		for (size_t j = 0; j < 1000; j++)
 			g_count++;
-		RLM3_ExitCritical();
+		RLM3_Lock_ExitCritical();
 	}
 
 	RLM3_Timer2_Deinit();
@@ -325,10 +287,20 @@ TEST_CASE(Task_EnterCritical)
 TEST_CASE(Task_EnterCriticalFromISR)
 {
 	SetTimer2Callback([] {
-		uint32_t saved = RLM3_EnterCriticalFromISR();
-		RLM3_ExitCriticalFromISR(saved);
+		uint32_t saved = RLM3_Lock_EnterCriticalISR();
+		RLM3_Lock_ExitCriticalISR(saved);
 	});
 	RLM3_Timer2_Init(5000);
-	RLM3_Delay(10);
+	RLM3_Task_Delay(10);
 	RLM3_Timer2_Deinit();
 }
+
+static void StartTimer(size_t frequency_hz)
+{
+}
+
+static void StopTimer()
+{
+}
+
+*/

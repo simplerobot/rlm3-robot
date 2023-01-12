@@ -1,4 +1,4 @@
-#include "Test.hpp"
+#include "Test.h"
 #include "rlm3-memory.h"
 #include "rlm3-task.h"
 #include "logger.h"
@@ -10,44 +10,44 @@ LOGGER_ZONE(TEST_MEM);
 
 TEST_CASE(MEMORY_Lifecycle)
 {
-	ASSERT(!RLM3_MEMORY_IsInit());
-	RLM3_MEMORY_Init();
-	ASSERT(RLM3_MEMORY_IsInit());
-	RLM3_MEMORY_Deinit();
-	ASSERT(!RLM3_MEMORY_IsInit());
+	ASSERT(!RLM3_Mem_IsInit());
+	RLM3_Mem_Init();
+	ASSERT(RLM3_Mem_IsInit());
+	RLM3_Mem_Deinit();
+	ASSERT(!RLM3_Mem_IsInit());
 }
 
 TEST_CASE(MEMORY_HappyCase)
 {
-	RLM3_MEMORY_Init();
+	RLM3_Mem_Init();
 
-	volatile uint32_t* test = (uint32_t*)RLM3_EXTERNAL_MEMORY_ADDRESS;
+	volatile uint32_t* test = (uint32_t*)RLM3_EXTERNAL_MEMORY_DATA;
 	*test = 0x12345678;
 
 	ASSERT(*test == 0x12345678);
 
-	RLM3_MEMORY_Deinit();
+	RLM3_Mem_Deinit();
 }
 
 TEST_CASE(MEMORY_WriteAllSequentialWords)
 {
 	std::default_random_engine random(20220803);
 
-	RLM3_MEMORY_Init();
+	RLM3_Mem_Init();
 
-	RLM3_Time write_start_time = RLM3_GetCurrentTime();
+	RLM3_Time write_start_time = RLM3_Time_Get();
 	for (size_t i = 0; i < RLM3_EXTERNAL_MEMORY_SIZE; i += 4)
-		*(uint32_t*)(RLM3_EXTERNAL_MEMORY_ADDRESS + i) = random();
-	RLM3_Time write_finish_time = RLM3_GetCurrentTime();
+		*(uint32_t*)(RLM3_EXTERNAL_MEMORY_DATA + i) = random();
+	RLM3_Time write_finish_time = RLM3_Time_Get();
 
 	random.seed(20220803);
 
-	RLM3_Time read_start_time = RLM3_GetCurrentTime();
+	RLM3_Time read_start_time = RLM3_Time_Get();
 	for (size_t i = 0; i < RLM3_EXTERNAL_MEMORY_SIZE; i += 4)
-		ASSERT(*(const uint32_t*)(RLM3_EXTERNAL_MEMORY_ADDRESS + i) == random());
-	RLM3_Time read_finish_time = RLM3_GetCurrentTime();
+		ASSERT(*(const uint32_t*)(RLM3_EXTERNAL_MEMORY_DATA + i) == random());
+	RLM3_Time read_finish_time = RLM3_Time_Get();
 
-	RLM3_MEMORY_Deinit();
+	RLM3_Mem_Deinit();
 
 	LOG_ALWAYS("Write Time: %u ms", (int)(write_finish_time - write_start_time));
 	LOG_ALWAYS("Read Time: %u ms", (int)(read_finish_time - read_start_time));
@@ -67,27 +67,27 @@ TEST_CASE(MEMORY_WriteRandomBytes)
 {
 	std::default_random_engine random(20220803);
 
-	RLM3_MEMORY_Init();
+	RLM3_Mem_Init();
 
-	RLM3_Time write_start_time = RLM3_GetCurrentTime();
+	RLM3_Time write_start_time = RLM3_Time_Get();
 	for (size_t i = 0, x = 1; i < RLM3_EXTERNAL_MEMORY_SIZE; i++)
 	{
 		x = LCG_Next(x);
-		*(RLM3_EXTERNAL_MEMORY_ADDRESS + x) = (uint8_t)random();
+		*(RLM3_EXTERNAL_MEMORY_DATA + x) = (uint8_t)random();
 	}
-	RLM3_Time write_finish_time = RLM3_GetCurrentTime();
+	RLM3_Time write_finish_time = RLM3_Time_Get();
 
 	random.seed(20220803);
 
-	RLM3_Time read_start_time = RLM3_GetCurrentTime();
+	RLM3_Time read_start_time = RLM3_Time_Get();
 	for (size_t i = 0, x = 1; i < RLM3_EXTERNAL_MEMORY_SIZE; i++)
 	{
 		x = LCG_Next(x);
-		ASSERT(*(RLM3_EXTERNAL_MEMORY_ADDRESS + x) == (uint8_t)random());
+		ASSERT(*(RLM3_EXTERNAL_MEMORY_DATA + x) == (uint8_t)random());
 	}
-	RLM3_Time read_finish_time = RLM3_GetCurrentTime();
+	RLM3_Time read_finish_time = RLM3_Time_Get();
 
-	RLM3_MEMORY_Deinit();
+	RLM3_Mem_Deinit();
 
 	LOG_ALWAYS("Write Time: %u ms", (int)(write_finish_time - write_start_time));
 	LOG_ALWAYS("Read Time: %u ms", (int)(read_finish_time - read_start_time));

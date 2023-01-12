@@ -1,11 +1,11 @@
-#include "Test.hpp"
+#include "Test.h"
 #include "rlm3-lock.h"
 #include "cmsis_os2.h"
 
 
 TEST_CASE(SpinLock_Lifecycle_HappyCase)
 {
-	RLM3_SpinLock test;
+	RLM3_SpinLock test = {};
 	RLM3_SpinLock_Init(&test);
 
 	RLM3_SpinLock_Enter(&test);
@@ -16,7 +16,7 @@ TEST_CASE(SpinLock_Lifecycle_HappyCase)
 
 TEST_CASE(SpinLock_MultipleThreads_SharedWork)
 {
-	static RLM3_SpinLock test;
+	static RLM3_SpinLock test = {};
 	auto secondary_thread_fn = [](void* param)
 	{
 		volatile size_t* value = (size_t*)param;
@@ -52,7 +52,7 @@ TEST_CASE(SpinLock_Try_HappyCase)
 		::osThreadExit();
 	};
 
-	RLM3_SpinLock test;
+	RLM3_SpinLock test = {};
 	RLM3_SpinLock_Init(&test);
 
 	osThreadAttr_t task_attributes = {};
@@ -68,7 +68,7 @@ TEST_CASE(SpinLock_Try_HappyCase)
 
 TEST_CASE(MutexLock_Lifecycle_HappyCase)
 {
-	RLM3_MutexLock test;
+	RLM3_MutexLock test = {};
 	RLM3_MutexLock_Init(&test);
 
 	RLM3_MutexLock_Enter(&test);
@@ -79,7 +79,7 @@ TEST_CASE(MutexLock_Lifecycle_HappyCase)
 
 TEST_CASE(MutexLock_MultipleThreads_SharedWork)
 {
-	static RLM3_MutexLock test;
+	static RLM3_MutexLock test = {};
 	auto secondary_thread_fn = [](void* param)
 	{
 		volatile size_t* value = (size_t*)param;
@@ -115,7 +115,7 @@ TEST_CASE(MutexLock_Try_HappyCase)
 		::osThreadExit();
 	};
 
-	RLM3_MutexLock test;
+	RLM3_MutexLock test = {};
 	RLM3_MutexLock_Init(&test);
 
 	osThreadAttr_t task_attributes = {};

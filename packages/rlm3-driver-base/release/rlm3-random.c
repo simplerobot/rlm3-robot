@@ -1,6 +1,6 @@
 #include "rlm3-random.h"
-#include "rlm3-helper.h"
 #include "rlm3-task.h"
+#include "rlm3-helper.h"
 #include "logger.h"
 #include "main.h"
 
@@ -8,20 +8,22 @@
 LOGGER_ZONE(RANDOM);
 
 
-static volatile RLM3_Task g_client_task = NULL;
-static volatile uint8_t* g_buffer = NULL;
-static volatile size_t g_size = 0;
-
-
 extern void RLM3_Random_Init()
 {
 	__HAL_RCC_RNG_CLK_ENABLE();
-    HAL_NVIC_SetPriority(HASH_RNG_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(HASH_RNG_IRQn);
+
+	SET_REGISTER_FLAGS(RNG->CR,
+			FLAG(RNG_CR_RNGEN, 1),  // Enable Random Number Generator
+			FLAG(RNG_CR_IE,    1)); // Enable Random Number Interrupt
 }
 
 extern void RLM3_Random_Deinit()
 {
+	SET_REGISTER_FLAGS(RNG->CR,
+		FLAG(RNG_CR_RNGEN, 0),  // Disable Random Number Generator
+		FLAG(RNG_CR_IE,    0)); // Disable Random Number Interrupt
+
     HAL_NVIC_DisableIRQ(HASH_RNG_IRQn);
 	__HAL_RCC_RNG_CLK_DISABLE();
 }
@@ -31,23 +33,10 @@ extern bool RLM3_Random_IsInit()
 	return __HAL_RCC_RNG_IS_CLK_ENABLED();
 }
 
-extern void RLM3_Random_Get(uint8_t* data, size_t size)
+extern __weak void RLM3_Random_CB_ISR(uint32_t entropy)
 {
-	g_client_task = RLM3_GetCurrentTask();
-	g_buffer = data;
-	g_size = size;
-	SET_REGISTER_FLAGS(RNG->CR,
-			FLAG(RNG_CR_RNGEN, 1),  // Enable Random Number Generator
-			FLAG(RNG_CR_IE,    1)); // Enable Random Number Interrupt
-
-	while (g_size > 0)
-		RLM3_Take();
-
-	SET_REGISTER_FLAGS(RNG->CR,
-		FLAG(RNG_CR_RNGEN, 0),  // Disable Random Number Generator
-		FLAG(RNG_CR_IE,    0)); // Disable Random Number Interrupt
-	g_buffer = NULL;
-	g_client_task = NULL;
+	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
+	ASSERT(false);
 }
 
 extern void HASH_RNG_IRQHandler(void)
@@ -65,11 +54,8 @@ extern void HASH_RNG_IRQHandler(void)
 			FLAG(RNG_SR_CEIS, 0),  // Clear clock error
 			FLAG(RNG_SR_SEIS, 0)); // Clear seed error
 	}
-	else if ((status & RNG_SR_DRDY) != 0 && g_size > 0)
+	else if ((status & RNG_SR_DRDY) != 0)
 	{
-		for (size_t i = 0; i < 4 && g_size > 0; i++, g_size--)
-			*(g_buffer++) = (uint8_t)(entropy >> (8 * i));
-		if (g_size == 0)
-			RLM3_GiveFromISR(g_client_task);
+		RLM3_Random_CB_ISR(entropy);
 	}
 }

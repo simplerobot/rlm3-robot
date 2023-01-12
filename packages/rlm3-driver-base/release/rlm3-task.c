@@ -3,85 +3,130 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "Assert.h"
+#include "logger.h"
 
 
-static bool IsISR()
+LOGGER_ZONE(TASK);
+
+
+#define RLM3_TASK_NORMAL_PRIORITY (24)
+
+
+extern RLM3_Time RLM3_Time_Get()
+{
+	ASSERT(!RLM3_Task_IsISR());
+	ASSERT(RLM3_Task_IsSchedulerRunning());
+
+	return xTaskGetTickCount();
+}
+
+extern RLM3_Time RLM3_Time_GetISR()
+{
+	ASSERT(!RLM3_Task_IsISR());
+	ASSERT(RLM3_Task_IsSchedulerRunning());
+
+	return xTaskGetTickCountFromISR();
+}
+
+extern bool RLM3_Task_IsSchedulerRunning()
+{
+	return (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING);
+}
+
+
+extern bool RLM3_Task_IsISR()
 {
 	return (__get_IPSR() != 0U);
 }
 
-extern RLM3_Time RLM3_GetCurrentTime()
+extern void RLM3_Task_Yield()
 {
-	ASSERT(!IsISR());
-	return xTaskGetTickCount();
-}
-
-extern RLM3_Time RLM3_GetCurrentTimeFromISR()
-{
-	ASSERT(IsISR());
-	return xTaskGetTickCountFromISR();
-}
-
-extern void RLM3_Yield()
-{
-	ASSERT(!IsISR());
+	ASSERT(!RLM3_Task_IsISR());
+	ASSERT(RLM3_Task_IsSchedulerRunning());
 	taskYIELD();
 }
 
-extern void RLM3_Delay(RLM3_Time delay_ms)
+extern void RLM3_Task_Delay(RLM3_Time delay_ms)
 {
-	ASSERT(!IsISR());
+	ASSERT(!RLM3_Task_IsISR());
+	ASSERT(RLM3_Task_IsSchedulerRunning());
 	vTaskDelay(delay_ms + 1);
 }
 
-extern void RLM3_DelayUntil(RLM3_Time start_time, RLM3_Time delay_ms)
+extern void RLM3_Task_DelayUntil(RLM3_Time start_time, RLM3_Time delay_ms)
 {
-	ASSERT(!IsISR());
+	ASSERT(!RLM3_Task_IsISR());
+	ASSERT(RLM3_Task_IsSchedulerRunning());
 	RLM3_Time start_time_copy = start_time;
 	vTaskDelayUntil(&start_time_copy, delay_ms);
 }
 
-extern RLM3_Task RLM3_GetCurrentTask()
+static void TaskMainFn(void* param)
 {
-	return xTaskGetCurrentTaskHandle();
+	RLM3_Task_Fn fn = (RLM3_Task_Fn)param;
+	fn();
+	vTaskDelete(NULL);
 }
 
-extern void RLM3_Give(RLM3_Task task)
+extern RLM3_Task RLM3_Task_Create(RLM3_Task_Fn fn, size_t stack_size_words, const char* name)
 {
-	ASSERT(!IsISR());
+	TaskHandle_t task = NULL;
+	BaseType_t result = xTaskCreate(TaskMainFn, name, stack_size_words, fn, RLM3_TASK_NORMAL_PRIORITY, &task);
+	if (task == NULL)
+	{
+		LOG_ERROR("Task Create '%s' %d Failed %d %c", name, (int)stack_size_words, (int)result, (task == NULL) ? 'N' : 'Y');
+		return NULL;
+	}
+	return (RLM3_Task)task;
+}
+
+extern RLM3_Task RLM3_Task_GetCurrent()
+{
+	ASSERT(!RLM3_Task_IsISR());
+	ASSERT(RLM3_Task_IsSchedulerRunning());
+	return (RLM3_Task)xTaskGetCurrentTaskHandle();
+}
+
+extern void RLM3_Task_Give(RLM3_Task task)
+{
+	ASSERT(!RLM3_Task_IsISR());
+	ASSERT(RLM3_Task_IsSchedulerRunning());
 	if (task != NULL)
 	{
-		xTaskNotifyGive(task);
+		xTaskNotifyGive((TaskHandle_t)task);
 	}
 }
 
-extern void RLM3_GiveFromISR(RLM3_Task task)
+extern void RLM3_Task_GiveISR(RLM3_Task task)
 {
-	ASSERT(IsISR());
+	ASSERT(RLM3_Task_IsISR());
 	if (task != NULL)
 	{
 		BaseType_t higher_priority_task_woken = pdFALSE;
-		vTaskNotifyGiveFromISR(task, &higher_priority_task_woken);
+		vTaskNotifyGiveFromISR((TaskHandle_t)task, &higher_priority_task_woken);
 		portYIELD_FROM_ISR(higher_priority_task_woken);
 	}
 }
 
-extern void RLM3_Take()
+extern void RLM3_Task_Take()
 {
-	ASSERT(!IsISR());
+	ASSERT(!RLM3_Task_IsISR());
+	ASSERT(RLM3_Task_IsSchedulerRunning());
 	ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 }
 
-extern bool RLM3_TakeWithTimeout(RLM3_Time timeout_ms)
+extern bool RLM3_Task_TakeWithTimeout(RLM3_Time timeout_ms)
 {
-	ASSERT(!IsISR());
+	ASSERT(!RLM3_Task_IsISR());
+	ASSERT(RLM3_Task_IsSchedulerRunning());
 	uint32_t value = ulTaskNotifyTake(pdTRUE, timeout_ms + 1);
 	return (value > 0);
 }
 
-extern bool RLM3_TakeUntil(RLM3_Time start_time, RLM3_Time delay_ms)
+extern bool RLM3_Task_TakeUntil(RLM3_Time start_time, RLM3_Time delay_ms)
 {
-	ASSERT(!IsISR());
+	ASSERT(!RLM3_Task_IsISR());
+	ASSERT(RLM3_Task_IsSchedulerRunning());
 	RLM3_Time current_time = xTaskGetTickCount();
 	if (current_time - start_time >= delay_ms)
 		return false;
@@ -89,22 +134,3 @@ extern bool RLM3_TakeUntil(RLM3_Time start_time, RLM3_Time delay_ms)
 	return (value > 0);
 }
 
-extern void RLM3_EnterCritical()
-{
-	taskENTER_CRITICAL();
-}
-
-extern uint32_t RLM3_EnterCriticalFromISR()
-{
-	return taskENTER_CRITICAL_FROM_ISR();
-}
-
-extern void RLM3_ExitCritical()
-{
-	taskEXIT_CRITICAL();
-}
-
-extern void RLM3_ExitCriticalFromISR(uint32_t saved_level)
-{
-	taskEXIT_CRITICAL_FROM_ISR(saved_level);
-}

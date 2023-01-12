@@ -1,19 +1,18 @@
-#include "Test.hpp"
+#include "Test.h"
 #include "rlm3-timer.h"
 #include "rlm3-task.h"
+#include "logger.h"
+
+
+#include "main.h"
+LOGGER_ZONE(TEST);
 
 
 typedef void (*TimerFn)();
 static TimerFn g_timer_fn = nullptr;
 
 
-extern void SetTimer2Callback(TimerFn timer_fn)
-{
-	g_timer_fn = timer_fn;
-}
-
-
-extern void RLM3_Timer2_Event_Callback()
+extern void RLM3_Timer2_Event_CB_ISR()
 {
 	if (g_timer_fn != nullptr)
 		g_timer_fn();
@@ -33,10 +32,10 @@ TEST_CASE(RLM3_Timer2_Lifecycle)
 TEST_CASE(RLM3_Timer2_HappyCase)
 {
 	static size_t g_count = 0;
-	SetTimer2Callback([] { g_count++; });
+	g_timer_fn = [] { g_count++; };
 
 	RLM3_Timer2_Init(5000);
-	RLM3_Delay(100);
+	RLM3_Task_Delay(100);
 	RLM3_Timer2_Deinit();
 
 	ASSERT(g_count >= 498 && g_count <= 502);

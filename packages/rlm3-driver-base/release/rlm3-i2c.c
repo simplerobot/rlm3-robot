@@ -23,144 +23,144 @@ enum
 };
 
 
-static RLM3_SpinLock g_lock_i2c1;
+static RLM3_MutexLock g_lock;
 
-static uint8_t g_active_devices_i2c1 = 0;
+static uint8_t g_active_devices = 0;
 
-static volatile uint8_t g_state_i2c1 = I2C_STATE_IDLE;
-static volatile RLM3_Task g_waiting_thread_i2c1 = NULL;
+static volatile uint8_t g_state = I2C_STATE_IDLE;
+static volatile RLM3_Task g_waiting_thread = NULL;
 
 
 static __attribute__((constructor)) void Init_I2C()
 {
-	RLM3_SpinLock_Init(&g_lock_i2c1);
+	RLM3_MutexLock_Init(&g_lock);
 }
 
 
-extern void RLM3_I2C1_Init(RLM3_I2C1_DEVICE device)
+extern void RLM3_I2C_Init(RLM3_I2C_DEVICE device)
 {
 	LOG_TRACE("Init %d", device);
 
-	ASSERT(device < RLM3_I2C1_DEVICE_COUNT);
-	ASSERT(READ_BIT(g_active_devices_i2c1, 1 << device) == 0);
+	ASSERT(device < RLM3_I2C_DEVICE_COUNT);
+	ASSERT(READ_BIT(g_active_devices, 1 << device) == 0);
 
-	RLM3_SpinLock_Enter(&g_lock_i2c1);
-	if (g_active_devices_i2c1 == 0)
+	RLM3_MutexLock_Enter(&g_lock);
+	if (g_active_devices == 0)
 		MX_I2C1_Init();
-	SET_BIT(g_active_devices_i2c1, 1 << device);
-	RLM3_SpinLock_Leave(&g_lock_i2c1);
+	SET_BIT(g_active_devices, 1 << device);
+	RLM3_MutexLock_Leave(&g_lock);
 }
 
-extern void RLM3_I2C1_Deinit(RLM3_I2C1_DEVICE device)
+extern void RLM3_I2C_Deinit(RLM3_I2C_DEVICE device)
 {
 	LOG_TRACE("Deinit %d", device);
 
-	ASSERT(device < RLM3_I2C1_DEVICE_COUNT);
-	ASSERT(READ_BIT(g_active_devices_i2c1, 1 << device) != 0);
+	ASSERT(device < RLM3_I2C_DEVICE_COUNT);
+	ASSERT(READ_BIT(g_active_devices, 1 << device) != 0);
 
-	RLM3_SpinLock_Enter(&g_lock_i2c1);
-	CLEAR_BIT(g_active_devices_i2c1, 1 << device);
-	if (g_active_devices_i2c1 == 0)
+	RLM3_MutexLock_Enter(&g_lock);
+	CLEAR_BIT(g_active_devices, 1 << device);
+	if (g_active_devices == 0)
 		HAL_I2C_DeInit(&hi2c1);
-	RLM3_SpinLock_Leave(&g_lock_i2c1);
+	RLM3_MutexLock_Leave(&g_lock);
 }
 
-extern bool RLM3_I2C1_IsInit(RLM3_I2C1_DEVICE device)
+extern bool RLM3_I2C_IsInit(RLM3_I2C_DEVICE device)
 {
-	return (READ_BIT(g_active_devices_i2c1, 1 << device) != 0);
+	return (READ_BIT(g_active_devices, 1 << device) != 0);
 }
 
-extern bool RLM3_I2C1_Transmit(uint32_t addr, const uint8_t* data, size_t size)
+extern bool RLM3_I2C_Transmit(RLM3_I2C_DEVICE device, uint32_t addr, const uint8_t* data, size_t size)
 {
 	LOG_TRACE("TX(%x) %d", (int)addr, size);
 
-	ASSERT(g_active_devices_i2c1 != 0);
+	ASSERT(RLM3_I2C_IsInit(device));
 	ASSERT(addr <= 0x7F);
 	ASSERT(data != NULL);
 	ASSERT(size > 0);
 
-	RLM3_SpinLock_Enter(&g_lock_i2c1);
-	ASSERT(g_waiting_thread_i2c1 == NULL);
-	ASSERT(g_state_i2c1 == I2C_STATE_IDLE);
-	g_waiting_thread_i2c1 = RLM3_GetCurrentTask();
-	g_state_i2c1 = I2C_STATE_TX_WAIT;
+	RLM3_MutexLock_Enter(&g_lock);
+	ASSERT(g_waiting_thread == NULL);
+	ASSERT(g_state == I2C_STATE_IDLE);
+	g_waiting_thread = RLM3_Task_GetCurrent();
+	g_state = I2C_STATE_TX_WAIT;
 
 	HAL_StatusTypeDef status = HAL_I2C_Master_Transmit_IT(&hi2c1, (addr << 1) | 0x00, (uint8_t*)data, size);
-	while (status == HAL_OK && g_state_i2c1 == I2C_STATE_TX_WAIT)
-		RLM3_Take();
-	bool result = (status == HAL_OK && g_state_i2c1 == I2C_STATE_TX_DONE);
+	while (status == HAL_OK && g_state == I2C_STATE_TX_WAIT)
+		RLM3_Task_Take();
+	bool result = (status == HAL_OK && g_state == I2C_STATE_TX_DONE);
 
-	g_waiting_thread_i2c1 = NULL;
-	g_state_i2c1 = I2C_STATE_IDLE;
-	RLM3_SpinLock_Leave(&g_lock_i2c1);
+	g_waiting_thread = NULL;
+	g_state = I2C_STATE_IDLE;
+	RLM3_MutexLock_Leave(&g_lock);
 
 	return result;
 }
 
-extern bool RLM3_I2C1_Receive(uint32_t addr, uint8_t* data, size_t size)
+extern bool RLM3_I2C_Receive(RLM3_I2C_DEVICE device, uint32_t addr, uint8_t* data, size_t size)
 {
 	LOG_TRACE("RX(%x) %d", (int)addr, size);
 
-	ASSERT(g_active_devices_i2c1 != 0);
+	ASSERT(RLM3_I2C_IsInit(device));
 	ASSERT(addr <= 0x7F);
 	ASSERT(data != NULL);
 	ASSERT(size > 0);
 
-	RLM3_SpinLock_Enter(&g_lock_i2c1);
-	ASSERT(g_waiting_thread_i2c1 == NULL);
-	ASSERT(g_state_i2c1 == I2C_STATE_IDLE);
-	g_waiting_thread_i2c1 = RLM3_GetCurrentTask();
-	g_state_i2c1 = I2C_STATE_RX_WAIT;
+	RLM3_MutexLock_Enter(&g_lock);
+	ASSERT(g_waiting_thread == NULL);
+	ASSERT(g_state == I2C_STATE_IDLE);
+	g_waiting_thread = RLM3_Task_GetCurrent();
+	g_state = I2C_STATE_RX_WAIT;
 
 	HAL_StatusTypeDef status = HAL_I2C_Master_Receive_IT(&hi2c1, (addr << 1) | 0x01, data, size);
 	while (status == HAL_OK && hi2c1.State == HAL_I2C_STATE_BUSY_RX)
-		RLM3_Take();
-	bool result = (status == HAL_OK && g_state_i2c1 == I2C_STATE_RX_DONE);
+		RLM3_Task_Take();
+	bool result = (status == HAL_OK && g_state == I2C_STATE_RX_DONE);
 
-	g_waiting_thread_i2c1 = NULL;
-	g_state_i2c1 = I2C_STATE_IDLE;
-	RLM3_SpinLock_Leave(&g_lock_i2c1);
+	g_waiting_thread = NULL;
+	g_state = I2C_STATE_IDLE;
+	RLM3_MutexLock_Leave(&g_lock);
 
 	return result;
 }
 
-extern bool RLM3_I2C1_TransmitReceive(uint32_t addr, const uint8_t* tx_data, size_t tx_size, uint8_t* rx_data, size_t rx_size)
+extern bool RLM3_I2C_TransmitReceive(RLM3_I2C_DEVICE device, uint32_t addr, const uint8_t* tx_data, size_t tx_size, uint8_t* rx_data, size_t rx_size)
 {
 	LOG_TRACE("TR(%x) %d %d", (int)addr, tx_size, rx_size);
 
-	ASSERT(g_active_devices_i2c1 != 0);
+	ASSERT(RLM3_I2C_IsInit(device));
 	ASSERT(addr <= 0x7F);
 	ASSERT(tx_data != NULL && rx_data != NULL);
 	ASSERT(tx_size > 0 && rx_size > 0);
 
-	RLM3_SpinLock_Enter(&g_lock_i2c1);
-	ASSERT(g_waiting_thread_i2c1 == NULL);
-	ASSERT(g_state_i2c1 == I2C_STATE_IDLE);
-	g_waiting_thread_i2c1 = RLM3_GetCurrentTask();
+	RLM3_MutexLock_Enter(&g_lock);
+	ASSERT(g_waiting_thread == NULL);
+	ASSERT(g_state == I2C_STATE_IDLE);
+	g_waiting_thread = RLM3_Task_GetCurrent();
 
 	HAL_StatusTypeDef status = HAL_OK;
 
 	if (status == HAL_OK)
 	{
-		g_state_i2c1 = I2C_STATE_TX_WAIT;
+		g_state = I2C_STATE_TX_WAIT;
 		status = HAL_I2C_Master_Seq_Transmit_IT(&hi2c1, (addr << 1) | 0x00, (uint8_t*)tx_data, tx_size, I2C_FIRST_FRAME);
 	}
-	while (status == HAL_OK && g_state_i2c1 == I2C_STATE_TX_WAIT)
-		RLM3_Take();
+	while (status == HAL_OK && g_state == I2C_STATE_TX_WAIT)
+		RLM3_Task_Take();
 
-	if (status == HAL_OK && g_state_i2c1 == I2C_STATE_TX_DONE)
+	if (status == HAL_OK && g_state == I2C_STATE_TX_DONE)
 	{
-		g_state_i2c1 = I2C_STATE_RX_WAIT;
+		g_state = I2C_STATE_RX_WAIT;
 		status = HAL_I2C_Master_Seq_Receive_IT(&hi2c1, (addr << 1) | 0x01, rx_data, rx_size, I2C_LAST_FRAME);
 	}
-	while (status == HAL_OK && g_state_i2c1 == I2C_STATE_RX_WAIT)
-		RLM3_Take();
+	while (status == HAL_OK && g_state == I2C_STATE_RX_WAIT)
+		RLM3_Task_Take();
 
-	bool result = (status == HAL_OK && g_state_i2c1 == I2C_STATE_RX_DONE);
+	bool result = (status == HAL_OK && g_state == I2C_STATE_RX_DONE);
 
-	g_waiting_thread_i2c1 = NULL;
-	g_state_i2c1 = I2C_STATE_IDLE;
-	RLM3_SpinLock_Leave(&g_lock_i2c1);
+	g_waiting_thread = NULL;
+	g_state = I2C_STATE_IDLE;
+	RLM3_MutexLock_Leave(&g_lock);
 
 	return result;
 }
@@ -170,8 +170,8 @@ static void WakeupWaitingThreadFromISR(I2C_HandleTypeDef *hi2c, uint8_t new_stat
 	LOG_TRACE("ISR %s", type);
 	if (hi2c == &hi2c1)
 	{
-		g_state_i2c1 = new_state;
-		RLM3_GiveFromISR(g_waiting_thread_i2c1);
+		g_state = new_state;
+		RLM3_Task_GiveISR(g_waiting_thread);
 	}
 }
 

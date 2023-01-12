@@ -10,15 +10,7 @@ extern "C" {
 #endif
 
 
-extern bool RLM3_IsIRQ();
-extern bool RLM3_IsSchedulerRunning();
-
-extern bool RLM3_IsDebugOutput();
-extern void RLM3_DebugOutput(uint8_t c);
-extern bool RLM3_DebugOutputFromISR(uint8_t c);
-
-extern void RLM3_GetUniqueDeviceId(uint8_t id_out[12]);
-extern uint32_t RLM3_GetUniqueDeviceShortId();
+extern void RLM3_Main_CB();
 
 
 #ifdef __cplusplus

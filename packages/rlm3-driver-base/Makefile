@@ -1,8 +1,8 @@
 DEPS += build-scripts
 DEPS += hw-test-agent
-DEPS += rlm3-hardware
-DEPS += rlm3-base
+DEPS += rlm-base
 DEPS += logger
+DEPS += rlm3-hardware
 DEPS += test-stm32
 include ../build-scripts/release/include.make
 
@@ -14,12 +14,12 @@ HX = $(TOOLCHAIN_PATH)objcopy -O ihex
 BN = $(TOOLCHAIN_PATH)objcopy -O binary -S
 
 MCU = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard 
-OPTIONS = -fdata-sections -ffunction-sections -Wall -Werror -DUSE_FULL_ASSERT=1 -fexceptions
+OPTIONS = -fdata-sections -ffunction-sections -fno-exceptions -Wall -Werror -DUSE_FULL_ASSERT=1
 
 LIBRARIES = \
 	-lc \
 	-lm \
-	-lstdc++
+	-lnosys
 
 DEFINES = \
 	-DUSE_HAL_DRIVER \
@@ -29,14 +29,14 @@ DEFINES = \
 	
 
 TEST_SOURCE_DIR = test
-TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(TEST_SOURCE_DIR) $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM3_BASE_DIR) $(PKG_LOGGER_DIR) $(PKG_TEST_STM32_DIR)
+TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(TEST_SOURCE_DIR) $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM_BASE_DIR) $(PKG_LOGGER_DIR) $(PKG_TEST_STM32_DIR)
 TEST_SOURCE_FILES = $(notdir $(wildcard $(TEST_SOURCE_DIRS:%=%/*.c) $(TEST_SOURCE_DIRS:%=%/*.cpp) $(TEST_SOURCE_DIRS:%=%/*.s)))
 TEST_BUILD_DIR = $(BUILD_DIR)/test
 TEST_O_FILES = $(addsuffix .o,$(basename $(TEST_SOURCE_FILES)))
 TEST_LD_FILE = $(wildcard $(PKG_RLM3_HARDWARE_DIR)/*.ld)
 
 STRESS_SOURCE_DIR = stress
-STRESS_SOURCE_DIRS = $(LIBRARY_DIR) $(STRESS_SOURCE_DIR) $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM3_BASE_DIR) $(PKG_LOGGER_DIR) $(PKG_TEST_STM32_DIR)
+STRESS_SOURCE_DIRS = $(LIBRARY_DIR) $(STRESS_SOURCE_DIR) $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM_BASE_DIR) $(PKG_LOGGER_DIR) $(PKG_TEST_STM32_DIR)
 STRESS_SOURCE_FILES = $(notdir $(wildcard $(STRESS_SOURCE_DIRS:%=%/*.c) $(STRESS_SOURCE_DIRS:%=%/*.cpp) $(STRESS_SOURCE_DIRS:%=%/*.s)))
 STRESS_BUILD_DIR = $(BUILD_DIR)/stress
 STRESS_O_FILES = $(addsuffix .o,$(basename $(STRESS_SOURCE_FILES)))

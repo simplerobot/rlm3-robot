@@ -58,13 +58,13 @@ static void UART_Deinit(USART_TypeDef* uart)
 			FLAG(USART_CR1_UE, 0)); // Disable UART
 }
 
-static void UART_EnsureTransmit(USART_TypeDef* uart)
+static void UART_Send(USART_TypeDef* uart)
 {
 	SET_REGISTER_FLAGS(uart->CR1,
 			FLAG(USART_CR1_TXEIE,  1)); // Enable TXE (Transmit data register empty) interrupt
 }
 
-extern void RLM3_UART2_Init(uint32_t baud_rate)
+extern void RLM3_UART_GPS_Init(uint32_t baud_rate)
 {
 	__HAL_RCC_USART2_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -83,7 +83,7 @@ extern void RLM3_UART2_Init(uint32_t baud_rate)
 	UART_Init(USART2, baud_rate);
 }
 
-extern void RLM3_UART2_Deinit()
+extern void RLM3_UART_GPS_Deinit()
 {
 	UART_Deinit(USART2);
 
@@ -94,18 +94,18 @@ extern void RLM3_UART2_Deinit()
 	HAL_NVIC_DisableIRQ(USART2_IRQn);
 }
 
-extern bool RLM3_UART2_IsInit()
+extern bool RLM3_UART_GPS_IsInit()
 {
 	return __HAL_RCC_USART2_IS_CLK_ENABLED();
 }
 
-extern void RLM3_UART2_EnsureTransmit()
+extern void RLM3_UART_GPS_Send()
 {
-	UART_EnsureTransmit(USART2);
+	UART_Send(USART2);
 }
 
 
-extern void RLM3_UART4_Init(uint32_t baud_rate)
+extern void RLM3_UART_WIFI_Init(uint32_t baud_rate)
 {
 	__HAL_RCC_UART4_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -124,7 +124,7 @@ extern void RLM3_UART4_Init(uint32_t baud_rate)
 	UART_Init(UART4, baud_rate);
 }
 
-extern void RLM3_UART4_Deinit()
+extern void RLM3_UART_WIFI_Deinit()
 {
 	UART_Deinit(UART4);
 
@@ -135,14 +135,14 @@ extern void RLM3_UART4_Deinit()
 	HAL_NVIC_DisableIRQ(UART4_IRQn);
 }
 
-extern bool RLM3_UART4_IsInit()
+extern bool RLM3_UART_WIFI_IsInit()
 {
 	return __HAL_RCC_UART4_IS_CLK_ENABLED();
 }
 
-extern void RLM3_UART4_EnsureTransmit()
+extern void RLM3_UART_WIFI_Send()
 {
-	UART_EnsureTransmit(UART4);
+	UART_Send(UART4);
 }
 
 void USART2_IRQHandler(void)
@@ -153,12 +153,12 @@ void USART2_IRQHandler(void)
 
 	if ((SR & USART_SR_RXNE) != 0 && (CR1 & USART_CR1_RXNEIE) != 0)
 	{
-		RLM3_UART2_ReceiveCallback(uart->DR & 0xFF);
+		RLM3_UART_GPS_Receive_CB_ISR(uart->DR & 0xFF);
 	}
 	if ((SR & USART_SR_TXE) != 0 && (CR1 & USART_CR1_TXEIE) != 0)
 	{
 		uint8_t data = 0;
-		if (RLM3_UART2_TransmitCallback(&data))
+		if (RLM3_UART_GPS_Transmit_CB_ISR(&data))
 		{
 			uart->DR = data;
 		}
@@ -170,7 +170,7 @@ void USART2_IRQHandler(void)
 	}
 	if ((SR & (USART_SR_ORE | USART_SR_NE | USART_SR_FE | USART_SR_PE)) != 0)
 	{
-		RLM3_UART2_ErrorCallback(SR);
+		RLM3_UART_GPS_Error_CB_ISR(SR);
 	}
 }
 
@@ -182,12 +182,12 @@ void UART4_IRQHandler(void)
 
 	if ((SR & USART_SR_RXNE) != 0 && (CR1 & USART_CR1_RXNEIE) != 0)
 	{
-		RLM3_UART4_ReceiveCallback(uart->DR & 0xFF);
+		RLM3_UART_WIFI_Receive_CB_ISR(uart->DR & 0xFF);
 	}
 	if ((SR & USART_SR_TXE) != 0 && (CR1 & USART_CR1_TXEIE) != 0)
 	{
 		uint8_t data = 0;
-		if (RLM3_UART4_TransmitCallback(&data))
+		if (RLM3_UART_WIFI_Transmit_CB_ISR(&data))
 		{
 			uart->DR = data;
 		}
@@ -199,39 +199,39 @@ void UART4_IRQHandler(void)
 	}
 	if ((SR & (USART_SR_ORE | USART_SR_NE | USART_SR_FE | USART_SR_PE)) != 0)
 	{
-		RLM3_UART4_ErrorCallback(SR);
+		RLM3_UART_WIFI_Error_CB_ISR(SR);
 	}
 }
 
 
-extern __weak void RLM3_UART2_ReceiveCallback(uint8_t data)
+extern __weak void RLM3_UART_GPS_Receive_CB_ISR(uint8_t data)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 }
 
-extern __weak bool RLM3_UART2_TransmitCallback(uint8_t* data_to_send)
-{
-	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
-	return false;
-}
-
-extern __weak void RLM3_UART2_ErrorCallback(uint32_t status_flags)
-{
-	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
-}
-
-extern __weak void RLM3_UART4_ReceiveCallback(uint8_t data)
-{
-	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
-}
-
-extern __weak bool RLM3_UART4_TransmitCallback(uint8_t* data_to_send)
+extern __weak bool RLM3_UART_GPS_Transmit_CB_ISR(uint8_t* data_to_send)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 	return false;
 }
 
-extern __weak void RLM3_UART4_ErrorCallback(uint32_t status_flags)
+extern __weak void RLM3_UART_GPS_Error_CB_ISR(uint32_t status_flags)
+{
+	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
+}
+
+extern __weak void RLM3_UART_WIFI_Receive_CB_ISR(uint8_t data)
+{
+	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
+}
+
+extern __weak bool RLM3_UART_WIFI_Transmit_CB_ISR(uint8_t* data_to_send)
+{
+	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
+	return false;
+}
+
+extern __weak void RLM3_UART_WIFI_Error_CB_ISR(uint32_t status_flags)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 }
