@@ -8,6 +8,7 @@ struct ExpectedCallI2C
 {
 	bool transmit = false;
 	bool receive = false;
+	RLM3_I2C_DEVICE device;
 	uint32_t address = 0;
 	std::vector<uint8_t> input;
 
@@ -16,34 +17,31 @@ struct ExpectedCallI2C
 	std::vector<uint8_t> output;
 };
 
-static uint32_t g_active_devices_i2c1 = 0;
+static uint32_t g_active_devices = 0;
 std::queue<ExpectedCallI2C> g_expected_calls;
 
 
-extern void RLM3_I2C1_Init(RLM3_I2C1_DEVICE device)
+extern void RLM3_I2C_Init(RLM3_I2C_DEVICE device)
 {
-	ASSERT(!SIM_RLM3_Is_IRQ());
-	uint32_t mask = 1 << device;
-	ASSERT(device < RLM3_I2C1_DEVICE_COUNT);
-	ASSERT((g_active_devices_i2c1 & mask) == 0);
-	g_active_devices_i2c1 |= mask;
+	ASSERT(device < RLM3_I2C_DEVICE_COUNT);
+	ASSERT(!SIM_IsISR());
+	ASSERT((g_active_devices & (1 << device)) == 0);
+	g_active_devices |= (1 << device);
 }
 
-extern void RLM3_I2C1_Deinit(RLM3_I2C1_DEVICE device)
+extern void RLM3_I2C_Deinit(RLM3_I2C_DEVICE device)
 {
-	ASSERT(!SIM_RLM3_Is_IRQ());
-	uint32_t mask = 1 << device;
-	ASSERT(device < RLM3_I2C1_DEVICE_COUNT);
-	ASSERT((g_active_devices_i2c1 & mask) != 0);
-	g_active_devices_i2c1 &= ~mask;
+	ASSERT(device < RLM3_I2C_DEVICE_COUNT);
+	ASSERT(!SIM_IsISR());
+	ASSERT((g_active_devices & (1 << device)) != 0);
+	g_active_devices &= ~(1 << device);
 }
 
-extern bool RLM3_I2C1_IsInit(RLM3_I2C1_DEVICE device)
+extern bool RLM3_I2C_IsInit(RLM3_I2C_DEVICE device)
 {
-	ASSERT(!SIM_RLM3_Is_IRQ());
-	uint32_t mask = 1 << device;
-	ASSERT(device < RLM3_I2C1_DEVICE_COUNT);
-	return ((g_active_devices_i2c1 & mask) != 0);
+	ASSERT(device < RLM3_I2C_DEVICE_COUNT);
+	ASSERT(!SIM_IsISR());
+	return ((g_active_devices & (1 << device)) != 0);
 }
 
 static ExpectedCallI2C GetNextExpectedCall()
@@ -54,19 +52,25 @@ static ExpectedCallI2C GetNextExpectedCall()
 	return call;
 }
 
-extern bool RLM3_I2C1_Transmit(uint32_t addr, const uint8_t* data, size_t size)
+extern bool RLM3_I2C_Transmit(RLM3_I2C_DEVICE device, uint32_t addr, const uint8_t* data, size_t size)
 {
+	ASSERT(RLM3_I2C_IsInit(device));
+
 	ExpectedCallI2C call = GetNextExpectedCall();
 	ASSERT(call.transmit && !call.receive);
+	ASSERT(call.device == device);
 	ASSERT(call.address == addr);
 	ASSERT(call.input == std::vector<uint8_t>(data, data + size));
 	return !call.failure;
 }
 
-extern bool RLM3_I2C1_Receive(uint32_t addr, uint8_t* data, size_t size)
+extern bool RLM3_I2C_Receive(RLM3_I2C_DEVICE device, uint32_t addr, uint8_t* data, size_t size)
 {
+	ASSERT(RLM3_I2C_IsInit(device));
+
 	ExpectedCallI2C call = GetNextExpectedCall();
 	ASSERT(!call.transmit && call.receive);
+	ASSERT(call.device == device);
 	ASSERT(call.address == addr);
 	if (call.failure)
 		return false;
@@ -76,10 +80,13 @@ extern bool RLM3_I2C1_Receive(uint32_t addr, uint8_t* data, size_t size)
 	return true;
 }
 
-extern bool RLM3_I2C1_TransmitReceive(uint32_t addr, const uint8_t* tx_data, size_t tx_size, uint8_t* rx_data, size_t rx_size)
+extern bool RLM3_I2C_TransmitReceive(RLM3_I2C_DEVICE device, uint32_t addr, const uint8_t* tx_data, size_t tx_size, uint8_t* rx_data, size_t rx_size)
 {
+	ASSERT(RLM3_I2C_IsInit(device));
+
 	ExpectedCallI2C call = GetNextExpectedCall();
 	ASSERT(call.transmit && call.receive);
+	ASSERT(call.device == device);
 	ASSERT(call.address == addr);
 	ASSERT(call.input == std::vector<uint8_t>(tx_data, tx_data + tx_size));
 	if (call.failure)
@@ -90,59 +97,65 @@ extern bool RLM3_I2C1_TransmitReceive(uint32_t addr, const uint8_t* tx_data, siz
 	return true;
 }
 
-extern void SIM_RLM3_I2C1_Transmit(uint32_t addr, const uint8_t* data, size_t size)
+extern void SIM_I2C_Transmit(RLM3_I2C_DEVICE device, uint32_t addr, const uint8_t* data, size_t size)
 {
 	ExpectedCallI2C call;
 	call.transmit = true;
+	call.device = device;
 	call.address = addr;
 	call.input.assign(data, data + size);
 	g_expected_calls.push(call);
 }
 
-extern void SIM_RLM3_I2C1_TransmitFailure(uint32_t addr, const uint8_t* data, size_t size)
+extern void SIM_I2C_TransmitFailure(RLM3_I2C_DEVICE device, uint32_t addr, const uint8_t* data, size_t size)
 {
 	ExpectedCallI2C call;
 	call.transmit = true;
+	call.device = device;
 	call.address = addr;
 	call.input.assign(data, data + size);
 	call.failure = true;
 	g_expected_calls.push(call);
 }
 
-extern void SIM_RLM3_I2C1_Receive(uint32_t addr, const uint8_t* data, size_t size)
+extern void SIM_I2C_Receive(RLM3_I2C_DEVICE device, uint32_t addr, const uint8_t* data, size_t size)
 {
 	ExpectedCallI2C call;
 	call.receive = true;
+	call.device = device;
 	call.address = addr;
 	call.output.assign(data, data + size);
 	g_expected_calls.push(call);
 }
 
-extern void SIM_RLM3_I2C1_ReceiveFailure(uint32_t addr)
+extern void SIM_I2C_ReceiveFailure(RLM3_I2C_DEVICE device, uint32_t addr)
 {
 	ExpectedCallI2C call;
 	call.receive = true;
+	call.device = device;
 	call.address = addr;
 	call.failure = true;
 	g_expected_calls.push(call);
 }
 
-extern void SIM_RLM3_I2C1_TransmitReceive(uint32_t addr, const uint8_t* tx_data, size_t tx_size, const uint8_t* rx_data, size_t rx_size)
+extern void SIM_I2C_TransmitReceive(RLM3_I2C_DEVICE device, uint32_t addr, const uint8_t* tx_data, size_t tx_size, const uint8_t* rx_data, size_t rx_size)
 {
 	ExpectedCallI2C call;
 	call.transmit = true;
 	call.receive = true;
+	call.device = device;
 	call.address = addr;
 	call.input.assign(tx_data, tx_data + tx_size);
 	call.output.assign(rx_data, rx_data + rx_size);
 	g_expected_calls.push(call);
 }
 
-extern void SIM_RLM3_I2C1_TransmitReceiveFailure(uint32_t addr, const uint8_t* tx_data, size_t tx_size)
+extern void SIM_I2C_TransmitReceiveFailure(RLM3_I2C_DEVICE device, uint32_t addr, const uint8_t* tx_data, size_t tx_size)
 {
 	ExpectedCallI2C call;
 	call.transmit = true;
 	call.receive = true;
+	call.device = device;
 	call.address = addr;
 	call.input.assign(tx_data, tx_data + tx_size);
 	call.failure = true;
@@ -151,7 +164,7 @@ extern void SIM_RLM3_I2C1_TransmitReceiveFailure(uint32_t addr, const uint8_t* t
 
 TEST_SETUP(SIM_I2C_INIT)
 {
-	g_active_devices_i2c1 = 0;
+	g_active_devices = 0;
 	while (!g_expected_calls.empty())
 		g_expected_calls.pop();
 }

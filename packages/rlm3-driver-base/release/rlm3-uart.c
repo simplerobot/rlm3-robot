@@ -204,34 +204,34 @@ void UART4_IRQHandler(void)
 }
 
 
-extern __weak void RLM3_UART_GPS_Receive_CB_ISR(uint8_t data)
+extern __attribute__((weak)) void RLM3_UART_GPS_Receive_CB_ISR(uint8_t data)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 }
 
-extern __weak bool RLM3_UART_GPS_Transmit_CB_ISR(uint8_t* data_to_send)
-{
-	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
-	return false;
-}
-
-extern __weak void RLM3_UART_GPS_Error_CB_ISR(uint32_t status_flags)
-{
-	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
-}
-
-extern __weak void RLM3_UART_WIFI_Receive_CB_ISR(uint8_t data)
-{
-	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
-}
-
-extern __weak bool RLM3_UART_WIFI_Transmit_CB_ISR(uint8_t* data_to_send)
+extern __attribute__((weak)) bool RLM3_UART_GPS_Transmit_CB_ISR(uint8_t* data_to_send)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 	return false;
 }
 
-extern __weak void RLM3_UART_WIFI_Error_CB_ISR(uint32_t status_flags)
+extern __attribute__((weak)) void RLM3_UART_GPS_Error_CB_ISR(uint32_t status_flags)
+{
+	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
+}
+
+extern __attribute__((weak)) void RLM3_UART_WIFI_Receive_CB_ISR(uint8_t data)
+{
+	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
+}
+
+extern __attribute__((weak)) bool RLM3_UART_WIFI_Transmit_CB_ISR(uint8_t* data_to_send)
+{
+	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
+	return false;
+}
+
+extern __attribute__((weak)) void RLM3_UART_WIFI_Error_CB_ISR(uint32_t status_flags)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 }

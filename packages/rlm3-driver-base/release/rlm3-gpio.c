@@ -72,7 +72,7 @@ extern bool RLM3_GPIO_IsInit()
 	}
 
 #define DEFINE_GPIO_CALLBACK(ID, NAME)                                              \
-	extern __weak void RLM3_GPIO_ ## NAME ## _Event_CB_ISR()                         \
+	extern __attribute__((weak)) void RLM3_GPIO_ ## NAME ## _Event_CB_ISR()           \
 	{                                                                               \
 		ASSERT(false); \
 	}
@@ -93,6 +93,7 @@ DEFINE_GPIO_PP(POWER_ENABLE, PowerEnable)
 DEFINE_GPIO_PP(STATUS_LIGHT, StatusLight)
 DEFINE_GPIO_PP(WIFI_ENABLE, WifiEnable)
 DEFINE_GPIO_PP(WIFI_BOOT_MODE, WifiBootMode)
+DEFINE_GPIO_PP(WIFI_RESET, WifiReset)
 DEFINE_GPIO_INT(BASE_SENSE, BaseSense)
 DEFINE_GPIO_INT(GPS_PULSE, GpsPulse)
 DEFINE_GPIO_INT(STOP_A, StopA)

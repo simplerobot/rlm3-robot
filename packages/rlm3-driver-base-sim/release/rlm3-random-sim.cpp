@@ -1,12 +1,11 @@
 #include "rlm3-random.h"
+#include "rlm3-sim.hpp"
 #include "Test.hpp"
 #include <queue>
 #include <random>
 
 
 static bool g_is_initialized = false;
-std::queue<uint8_t> g_data;
-std::default_random_engine g_random;
 
 
 extern void RLM3_Random_Init()
@@ -26,33 +25,20 @@ extern bool RLM3_Random_IsInit()
 	return g_is_initialized;
 }
 
-extern void RLM3_Random_Get(uint8_t* data, size_t size)
+extern void SIM_Random_Add(uint32_t entropy)
 {
-	ASSERT(g_is_initialized);
-	for (size_t i = 0; i < size; i++)
-	{
-		if (!g_data.empty())
-		{
-			data[i] = g_data.front();
-			g_data.pop();
-		}
-		else
-		{
-			data[i] = (uint8_t)g_random();
-		}
-	}
+	SIM_AddInterrupt([=]() {
+		RLM3_Random_CB_ISR(entropy);
+	});
 }
 
-extern void SIM_Random_Add(const uint8_t* data, size_t size)
+extern __attribute__((weak)) void RLM3_Random_CB_ISR(uint32_t entropy)
 {
-	for (size_t i = 0; i < size; i++)
-		g_data.push(data[i]);
+	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
+	ASSERT(false);
 }
 
-TEST_SETUP(SIM_Random)
+TEST_TEARDOWN(SIM_Random_Teardown)
 {
-	while (!g_data.empty())
-		g_data.pop();
 	g_is_initialized = false;
 }
-

@@ -10,7 +10,7 @@ extern "C" {
 extern void RLM3_Timer2_Init(size_t frequency_hz);
 extern void RLM3_Timer2_Deinit();
 extern bool RLM3_Timer2_IsInit();
-extern void RLM3_Timer2_Event_Callback();
+extern void RLM3_Timer2_Event_CB_ISR();
 
 extern void SIM_Timer2_Event();
 

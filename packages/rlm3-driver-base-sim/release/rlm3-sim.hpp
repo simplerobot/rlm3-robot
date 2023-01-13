@@ -15,7 +15,7 @@
 #include <string>
 
 
-extern bool SIM_RLM3_Is_IRQ();
+extern bool SIM_IsISR();
 
 extern void SIM_AddInterrupt(std::function<void()> interrupt);
 extern void SIM_AddDelay(RLM3_Time delay);

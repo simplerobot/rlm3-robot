@@ -77,17 +77,26 @@ extern bool RLM3_Motors_IsEnabled()
 	return RLM3_GPIO_MotorEnable_IsLow();
 }
 
-static inline void SetHBridge(TIM_HandleTypeDef* a_timer, uint32_t a_channel, TIM_HandleTypeDef* b_timer, uint32_t b_channel, uint32_t period, int8_t duty)
+static void SetDuty(TIM_HandleTypeDef* timer, uint32_t channel, uint32_t period, float duty)
 {
-	if (duty > 0)
-	{
-		__HAL_TIM_SET_COMPARE(b_timer, b_channel, 0);
-		__HAL_TIM_SET_COMPARE(a_timer, a_channel, (1 + duty) * (period + 1) / 128);
-	}
-	else if (duty < -1)
+	ASSERT(duty >= 0.0f && duty <= 1.0f);
+	uint32_t iduty = (uint32_t)((period + 1) * duty);
+	__HAL_TIM_SET_COMPARE(timer, channel, iduty);
+}
+
+static inline void SetHBridge(TIM_HandleTypeDef* a_timer, uint32_t a_channel, TIM_HandleTypeDef* b_timer, uint32_t b_channel, uint32_t period, float duty)
+{
+	ASSERT(-1.0f <= duty && duty <= 1.0f);
+
+	if (-1.0f <= duty && duty < 0.0f)
 	{
 		__HAL_TIM_SET_COMPARE(a_timer, a_channel, 0);
-		__HAL_TIM_SET_COMPARE(b_timer, b_channel, (0 - duty) * (period + 1) / 128);
+		SetDuty(b_timer, b_channel, period, -duty);
+	}
+	else if (0.0f < duty && duty <= 1.0f)
+	{
+		__HAL_TIM_SET_COMPARE(b_timer, b_channel, 0);
+		SetDuty(a_timer, a_channel, period, duty);
 	}
 	else
 	{
@@ -96,7 +105,7 @@ static inline void SetHBridge(TIM_HandleTypeDef* a_timer, uint32_t a_channel, TI
 	}
 }
 
-extern void RLM3_Motors_SetWheels(int8_t left, int8_t right)
+extern void RLM3_Motors_SetWheels(float left, float right)
 {
 	ASSERT(RLM3_Motors_IsEnabled());
 
@@ -104,7 +113,7 @@ extern void RLM3_Motors_SetWheels(int8_t left, int8_t right)
 	SetHBridge(&htim1, TIM_CHANNEL_2, &htim1, TIM_CHANNEL_3, 4500, right);
 }
 
-extern void RLM3_Motors_SetBlade(int8_t blade)
+extern void RLM3_Motors_SetBlade(float blade)
 {
 	ASSERT(RLM3_Motors_IsEnabled());
 

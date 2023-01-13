@@ -2,237 +2,227 @@
 #include "rlm3-gpio.h"
 
 
-TEST_CASE(GPIO_ClockEnable_HappyCase)
+TEST_CASE(GPIO_Lifecycle)
 {
-	ASSERT(!SIM_GPIO_IsClockEnabled(GPIOB));
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	ASSERT(SIM_GPIO_IsClockEnabled(GPIOB));
-	__HAL_RCC_GPIOB_CLK_DISABLE();
-	ASSERT(!SIM_GPIO_IsClockEnabled(GPIOB));
+	ASSERT(!RLM3_GPIO_IsInit());
+	RLM3_GPIO_Init();
+	ASSERT(RLM3_GPIO_IsInit());
+	RLM3_GPIO_DeInit();
+	ASSERT(!RLM3_GPIO_IsInit());
 }
 
-TEST_CASE(GPIO_ClockEnable_AlreadyEnabled)
+TEST_CASE(GPIO_GetSet)
 {
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	ASSERT_ASSERTS(__HAL_RCC_GPIOB_CLK_ENABLE());
+	RLM3_GPIO_Init();
+
+	ASSERT(!RLM3_GPIO_CameraPowerDown_IsHigh());
+	ASSERT(RLM3_GPIO_CameraPowerDown_IsLow());
+	RLM3_GPIO_CameraPowerDown_SetHigh();
+	ASSERT(RLM3_GPIO_CameraPowerDown_IsHigh());
+	ASSERT(!RLM3_GPIO_CameraPowerDown_IsLow());
+	RLM3_GPIO_CameraPowerDown_SetLow();
+	ASSERT(!RLM3_GPIO_CameraPowerDown_IsHigh());
+	ASSERT(RLM3_GPIO_CameraPowerDown_IsLow());
+
+	ASSERT(!RLM3_GPIO_CameraReset_IsHigh());
+	ASSERT(RLM3_GPIO_CameraReset_IsLow());
+	RLM3_GPIO_CameraReset_SetHigh();
+	ASSERT(RLM3_GPIO_CameraReset_IsHigh());
+	ASSERT(!RLM3_GPIO_CameraReset_IsLow());
+	RLM3_GPIO_CameraReset_SetLow();
+	ASSERT(!RLM3_GPIO_CameraReset_IsHigh());
+	ASSERT(RLM3_GPIO_CameraReset_IsLow());
+
+	ASSERT(!RLM3_GPIO_GpsReset_IsHigh());
+	ASSERT(RLM3_GPIO_GpsReset_IsLow());
+	RLM3_GPIO_GpsReset_SetHigh();
+	ASSERT(RLM3_GPIO_GpsReset_IsHigh());
+	ASSERT(!RLM3_GPIO_GpsReset_IsLow());
+	RLM3_GPIO_GpsReset_SetLow();
+	ASSERT(!RLM3_GPIO_GpsReset_IsHigh());
+	ASSERT(RLM3_GPIO_GpsReset_IsLow());
+
+	ASSERT(!RLM3_GPIO_InertiaChipSelect_IsHigh());
+	ASSERT(RLM3_GPIO_InertiaChipSelect_IsLow());
+	RLM3_GPIO_InertiaChipSelect_SetHigh();
+	ASSERT(RLM3_GPIO_InertiaChipSelect_IsHigh());
+	ASSERT(!RLM3_GPIO_InertiaChipSelect_IsLow());
+	RLM3_GPIO_InertiaChipSelect_SetLow();
+	ASSERT(!RLM3_GPIO_InertiaChipSelect_IsHigh());
+	ASSERT(RLM3_GPIO_InertiaChipSelect_IsLow());
+
+	ASSERT(!RLM3_GPIO_StatusLight_IsHigh());
+	ASSERT(RLM3_GPIO_StatusLight_IsLow());
+	RLM3_GPIO_StatusLight_SetHigh();
+	ASSERT(RLM3_GPIO_StatusLight_IsHigh());
+	ASSERT(!RLM3_GPIO_StatusLight_IsLow());
+	RLM3_GPIO_StatusLight_SetLow();
+	ASSERT(!RLM3_GPIO_StatusLight_IsHigh());
+	ASSERT(RLM3_GPIO_StatusLight_IsLow());
+
+	ASSERT(RLM3_GPIO_PowerEnable_IsHigh());
+	ASSERT(!RLM3_GPIO_PowerEnable_IsLow());
+	RLM3_GPIO_PowerEnable_SetLow();
+	ASSERT(!RLM3_GPIO_PowerEnable_IsHigh());
+	ASSERT(RLM3_GPIO_PowerEnable_IsLow());
+	RLM3_GPIO_PowerEnable_SetHigh();
+	ASSERT(RLM3_GPIO_PowerEnable_IsHigh());
+	ASSERT(!RLM3_GPIO_PowerEnable_IsLow());
+
+	ASSERT(RLM3_GPIO_MotorEnable_IsHigh());
+	ASSERT(!RLM3_GPIO_MotorEnable_IsLow());
+	RLM3_GPIO_MotorEnable_SetLow();
+	ASSERT(!RLM3_GPIO_MotorEnable_IsHigh());
+	ASSERT(RLM3_GPIO_MotorEnable_IsLow());
+	RLM3_GPIO_MotorEnable_SetHigh();
+	ASSERT(RLM3_GPIO_MotorEnable_IsHigh());
+	ASSERT(!RLM3_GPIO_MotorEnable_IsLow());
+
+	ASSERT(!RLM3_GPIO_WifiEnable_IsHigh());
+	ASSERT(RLM3_GPIO_WifiEnable_IsLow());
+	RLM3_GPIO_WifiEnable_SetHigh();
+	ASSERT(RLM3_GPIO_WifiEnable_IsHigh());
+	ASSERT(!RLM3_GPIO_WifiEnable_IsLow());
+	RLM3_GPIO_WifiEnable_SetLow();
+	ASSERT(!RLM3_GPIO_WifiEnable_IsHigh());
+	ASSERT(RLM3_GPIO_WifiEnable_IsLow());
+
+	ASSERT(!RLM3_GPIO_WifiBootMode_IsHigh());
+	ASSERT(RLM3_GPIO_WifiBootMode_IsLow());
+	RLM3_GPIO_WifiBootMode_SetHigh();
+	ASSERT(RLM3_GPIO_WifiBootMode_IsHigh());
+	ASSERT(!RLM3_GPIO_WifiBootMode_IsLow());
+	RLM3_GPIO_WifiBootMode_SetLow();
+	ASSERT(!RLM3_GPIO_WifiBootMode_IsHigh());
+	ASSERT(RLM3_GPIO_WifiBootMode_IsLow());
+
+	ASSERT(!RLM3_GPIO_WifiReset_IsHigh());
+	ASSERT(RLM3_GPIO_WifiReset_IsLow());
+	RLM3_GPIO_WifiReset_SetHigh();
+	ASSERT(RLM3_GPIO_WifiReset_IsHigh());
+	ASSERT(!RLM3_GPIO_WifiReset_IsLow());
+	RLM3_GPIO_WifiReset_SetLow();
+	ASSERT(!RLM3_GPIO_WifiReset_IsHigh());
+	ASSERT(RLM3_GPIO_WifiReset_IsLow());
 }
 
-TEST_CASE(GPIO_ClockEnable_AlreadyDisabled)
+
+/*
+
+extern bool RLM3_GPIO_BaseSense_IsHigh();
+extern bool RLM3_GPIO_BaseSense_IsLow();
+extern bool RLM3_GPIO_GpsPulse_IsHigh();
+extern bool RLM3_GPIO_GpsPulse_IsLow();
+extern bool RLM3_GPIO_StopA_IsHigh();
+extern bool RLM3_GPIO_StopA_IsLow();
+extern bool RLM3_GPIO_StopB_IsHigh();
+extern bool RLM3_GPIO_StopB_IsLow();
+
+extern void RLM3_GPIO_BaseSense_Event_CB_ISR();
+extern void RLM3_GPIO_GpsPulse_Event_CB_ISR();
+extern void RLM3_GPIO_StopA_Event_CB_ISR();
+extern void RLM3_GPIO_StopB_Event_CB_ISR();
+
+extern void SIM_GPIO_BaseSense_SetHigh();
+extern void SIM_GPIO_BaseSense_SetLow();
+extern void SIM_GPIO_GpsPulse_SetHigh();
+extern void SIM_GPIO_GpsPulse_SetLow();
+extern void SIM_GPIO_StopA_SetHigh();
+extern void SIM_GPIO_StopA_SetLow();
+extern void SIM_GPIO_StopB_SetHigh();
+extern void SIM_GPIO_StopB_SetLow();
+
+extern void SIM_GPIO_BaseSense_Event();
+extern void SIM_GPIO_GpsPulse_Event();
+extern void SIM_GPIO_StopA_Event();
+extern void SIM_GPIO_StopB_Event();
+*/
+
+
+/*
+#include "Test.hpp"
+#include "rlm3-gpio.h"
+#include "rlm3-task.h"
+#include "rlm3-sim.hpp"
+
+
+size_t g_exti_count = 0;
+RLM3_Task g_client_task = NULL;
+
+extern void RLM3_EXTI12_Callback()
 {
-	ASSERT_ASSERTS(__HAL_RCC_GPIOB_CLK_DISABLE());
+	g_exti_count++;
+	RLM3_Task_GiveISR(g_client_task);
 }
 
-TEST_CASE(HAL_GPIO_Init_HappyCase)
+TEST_CASE(SIM_GPIO_Interrupt_HappyCase)
 {
-	__HAL_RCC_GPIOB_CLK_ENABLE();
+	g_client_task = RLM3_Task_GetCurrent();
+	g_exti_count = 0;
+	SIM_AddDelay(10);
+	SIM_GPIO_Interrupt(GPIOA, GPIO_PIN_12);
+
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 	GPIO_InitTypeDef init = {};
-	init.Pin = GPIO_PIN_0 | GPIO_PIN_6 | GPIO_PIN_14;
-	init.Mode = GPIO_MODE_OUTPUT_PP;
+	init.Pin = GPIO_PIN_12;
+	init.Mode = GPIO_MODE_IT_RISING;
 	init.Pull = GPIO_NOPULL;
-	init.Speed = GPIO_SPEED_FREQ_HIGH;
+	init.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &init);
 
-	HAL_GPIO_Init(GPIOB, &init);
-
-	ASSERT(SIM_GPIO_IsEnabled(GPIOB, GPIO_PIN_0));
-	ASSERT(SIM_GPIO_IsEnabled(GPIOB, GPIO_PIN_6));
-	ASSERT(SIM_GPIO_IsEnabled(GPIOB, GPIO_PIN_14));
-	ASSERT(!SIM_GPIO_IsEnabled(GPIOB, GPIO_PIN_1));
-	ASSERT(!SIM_GPIO_IsEnabled(GPIOB, GPIO_PIN_8));
-	ASSERT(!SIM_GPIO_IsEnabled(GPIOB, GPIO_PIN_15));
-	ASSERT(SIM_GPIO_GetMode(GPIOB, GPIO_PIN_0) == GPIO_MODE_OUTPUT_PP);
-	ASSERT(SIM_GPIO_GetMode(GPIOB, GPIO_PIN_6) == GPIO_MODE_OUTPUT_PP);
-	ASSERT(SIM_GPIO_GetMode(GPIOB, GPIO_PIN_14) == GPIO_MODE_OUTPUT_PP);
-	ASSERT(SIM_GPIO_GetMode(GPIOB, GPIO_PIN_1) == GPIO_MODE_DISABLED);
-	ASSERT(SIM_GPIO_GetMode(GPIOB, GPIO_PIN_8) == GPIO_MODE_DISABLED);
-	ASSERT(SIM_GPIO_GetMode(GPIOB, GPIO_PIN_15) == GPIO_MODE_DISABLED);
-	ASSERT(SIM_GPIO_GetPull(GPIOB, GPIO_PIN_0) == GPIO_NOPULL);
-	ASSERT(SIM_GPIO_GetPull(GPIOB, GPIO_PIN_6) == GPIO_NOPULL);
-	ASSERT(SIM_GPIO_GetPull(GPIOB, GPIO_PIN_14) == GPIO_NOPULL);
-	ASSERT(SIM_GPIO_GetPull(GPIOB, GPIO_PIN_1) == GPIO_PULL_DISABLED);
-	ASSERT(SIM_GPIO_GetPull(GPIOB, GPIO_PIN_8) == GPIO_PULL_DISABLED);
-	ASSERT(SIM_GPIO_GetPull(GPIOB, GPIO_PIN_15) == GPIO_PULL_DISABLED);
-	ASSERT(SIM_GPIO_GetSpeed(GPIOB, GPIO_PIN_0) == GPIO_SPEED_FREQ_HIGH);
-	ASSERT(SIM_GPIO_GetSpeed(GPIOB, GPIO_PIN_6) == GPIO_SPEED_FREQ_HIGH);
-	ASSERT(SIM_GPIO_GetSpeed(GPIOB, GPIO_PIN_14) == GPIO_SPEED_FREQ_HIGH);
-	ASSERT(SIM_GPIO_GetSpeed(GPIOB, GPIO_PIN_1) == GPIO_SPEED_DISABLED);
-	ASSERT(SIM_GPIO_GetSpeed(GPIOB, GPIO_PIN_8) == GPIO_SPEED_DISABLED);
-	ASSERT(SIM_GPIO_GetSpeed(GPIOB, GPIO_PIN_15) == GPIO_SPEED_DISABLED);
-	ASSERT(SIM_GPIO_GetAlt(GPIOB, GPIO_PIN_0) == GPIO_AF_DISABLED);
-	ASSERT(SIM_GPIO_GetAlt(GPIOB, GPIO_PIN_6) == GPIO_AF_DISABLED);
-	ASSERT(SIM_GPIO_GetAlt(GPIOB, GPIO_PIN_14) == GPIO_AF_DISABLED);
-	ASSERT(SIM_GPIO_GetAlt(GPIOB, GPIO_PIN_1) == GPIO_AF_DISABLED);
-	ASSERT(SIM_GPIO_GetAlt(GPIOB, GPIO_PIN_8) == GPIO_AF_DISABLED);
-	ASSERT(SIM_GPIO_GetAlt(GPIOB, GPIO_PIN_15) == GPIO_AF_DISABLED);
+	ASSERT(g_exti_count == 0);
+	RLM3_Task_Take();
+	ASSERT(g_exti_count == 1);
+	ASSERT(RLM3_Time_Get() == 10);
 }
 
-TEST_CASE(HAL_GPIO_Init_ClockOff)
+TEST_CASE(SIM_GPIO_Interrupt_ClockNotEnabled)
 {
+	g_client_task = RLM3_Task_GetCurrent();
+	SIM_GPIO_Interrupt(GPIOA, GPIO_PIN_12);
+	SIM_AddInterrupt([&]() { RLM3_Task_GiveISR(g_client_task); });
+
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 	GPIO_InitTypeDef init = {};
-	init.Pin = GPIO_PIN_0 | GPIO_PIN_6 | GPIO_PIN_14;
-	init.Mode = GPIO_MODE_OUTPUT_PP;
+	init.Pin = GPIO_PIN_12;
+	init.Mode = GPIO_MODE_IT_RISING;
 	init.Pull = GPIO_NOPULL;
-	init.Speed = GPIO_SPEED_FREQ_HIGH;
+	init.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &init);
+	__HAL_RCC_GPIOA_CLK_DISABLE();
 
-	ASSERT_ASSERTS(HAL_GPIO_Init(GPIOB, &init));
+	ASSERT_ASSERTS(RLM3_Task_Take());
+	RLM3_Task_Take();
 }
 
-TEST_CASE(HAL_GPIO_Init_NULL)
+TEST_CASE(SIM_GPIO_Interrupt_PinNotEnabled)
 {
-	__HAL_RCC_GPIOB_CLK_ENABLE();
+	g_client_task = RLM3_Task_GetCurrent();
+	SIM_GPIO_Interrupt(GPIOA, GPIO_PIN_12);
+	SIM_AddInterrupt([&]() { RLM3_Task_GiveISR(g_client_task); });
 
-	ASSERT_ASSERTS(HAL_GPIO_Init(GPIOB, nullptr));
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+
+	ASSERT_ASSERTS(RLM3_Task_Take());
+	RLM3_Task_Take();
 }
 
-TEST_CASE(HAL_GPIO_Init_Twice)
+TEST_CASE(SIM_GPIO_Interrupt_NotInterruptPin)
 {
-	__HAL_RCC_GPIOB_CLK_ENABLE();
+	g_client_task = RLM3_Task_GetCurrent();
+	SIM_GPIO_Interrupt(GPIOA, GPIO_PIN_12);
+	SIM_AddInterrupt([&]() { RLM3_Task_GiveISR(g_client_task); });
+
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 	GPIO_InitTypeDef init = {};
-	init.Pin = GPIO_PIN_0 | GPIO_PIN_6 | GPIO_PIN_14;
-	init.Mode = GPIO_MODE_OUTPUT_PP;
-	init.Pull = GPIO_NOPULL;
-	init.Speed = GPIO_SPEED_FREQ_HIGH;
-
-	HAL_GPIO_Init(GPIOB, &init);
-	ASSERT_ASSERTS(HAL_GPIO_Init(GPIOB, &init));
-}
-
-TEST_CASE(HAL_GPIO_DeInit_HappyCase)
-{
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	GPIO_InitTypeDef init = {};
-	init.Pin = GPIO_PIN_0 | GPIO_PIN_6 | GPIO_PIN_14;
-	init.Mode = GPIO_MODE_OUTPUT_PP;
-	init.Pull = GPIO_NOPULL;
-	init.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOB, &init);
-
-	HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0 | GPIO_PIN_14);
-
-	ASSERT(!SIM_GPIO_IsEnabled(GPIOB, GPIO_PIN_0));
-	ASSERT(SIM_GPIO_IsEnabled(GPIOB, GPIO_PIN_6));
-	ASSERT(!SIM_GPIO_IsEnabled(GPIOB, GPIO_PIN_14));
-	ASSERT(SIM_GPIO_GetMode(GPIOB, GPIO_PIN_0) == GPIO_MODE_DISABLED);
-	ASSERT(SIM_GPIO_GetMode(GPIOB, GPIO_PIN_6) == GPIO_MODE_OUTPUT_PP);
-	ASSERT(SIM_GPIO_GetMode(GPIOB, GPIO_PIN_14) == GPIO_MODE_DISABLED);
-	ASSERT(SIM_GPIO_GetPull(GPIOB, GPIO_PIN_0) == GPIO_PULL_DISABLED);
-	ASSERT(SIM_GPIO_GetPull(GPIOB, GPIO_PIN_6) == GPIO_NOPULL);
-	ASSERT(SIM_GPIO_GetPull(GPIOB, GPIO_PIN_14) == GPIO_PULL_DISABLED);
-	ASSERT(SIM_GPIO_GetSpeed(GPIOB, GPIO_PIN_0) == GPIO_SPEED_DISABLED);
-	ASSERT(SIM_GPIO_GetSpeed(GPIOB, GPIO_PIN_6) == GPIO_SPEED_FREQ_HIGH);
-	ASSERT(SIM_GPIO_GetSpeed(GPIOB, GPIO_PIN_14) == GPIO_SPEED_DISABLED);
-	ASSERT(SIM_GPIO_GetAlt(GPIOB, GPIO_PIN_0) == GPIO_AF_DISABLED);
-	ASSERT(SIM_GPIO_GetAlt(GPIOB, GPIO_PIN_6) == GPIO_AF_DISABLED);
-	ASSERT(SIM_GPIO_GetAlt(GPIOB, GPIO_PIN_14) == GPIO_AF_DISABLED);
-}
-
-TEST_CASE(HAL_GPIO_DeInit_NoClock)
-{
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	GPIO_InitTypeDef init = {};
-	init.Pin = GPIO_PIN_0 | GPIO_PIN_6 | GPIO_PIN_14;
-	init.Mode = GPIO_MODE_OUTPUT_PP;
-	init.Pull = GPIO_NOPULL;
-	init.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOB, &init);
-	__HAL_RCC_GPIOB_CLK_DISABLE();
-
-	ASSERT_ASSERTS(HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0 | GPIO_PIN_14));
-}
-
-TEST_CASE(HAL_GPIO_DeInit_DisabledPin)
-{
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-
-	ASSERT_ASSERTS(HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0 | GPIO_PIN_14));
-}
-
-TEST_CASE(HAL_GPIO_WritePin_HappyCase)
-{
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	GPIO_InitTypeDef init = {};
-	init.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_6 | GPIO_PIN_14;
-	init.Mode = GPIO_MODE_OUTPUT_PP;
-	init.Pull = GPIO_NOPULL;
-	init.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOB, &init);
-
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0 | GPIO_PIN_6 | GPIO_PIN_14, GPIO_PIN_SET);
-	ASSERT(SIM_GPIO_Read(GPIOB, GPIO_PIN_0));
-	ASSERT(!SIM_GPIO_Read(GPIOB, GPIO_PIN_1));
-	ASSERT(SIM_GPIO_Read(GPIOB, GPIO_PIN_14));
-
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0 | GPIO_PIN_6, GPIO_PIN_RESET);
-	ASSERT(!SIM_GPIO_Read(GPIOB, GPIO_PIN_0));
-	ASSERT(!SIM_GPIO_Read(GPIOB, GPIO_PIN_1));
-	ASSERT(SIM_GPIO_Read(GPIOB, GPIO_PIN_14));
-}
-
-TEST_CASE(HAL_GPIO_WritePin_DisabledClock)
-{
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	GPIO_InitTypeDef init = {};
-	init.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_6 | GPIO_PIN_14;
+	init.Pin = GPIO_PIN_12;
 	init.Mode = GPIO_MODE_INPUT;
 	init.Pull = GPIO_NOPULL;
-	init.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOB, &init);
-	__HAL_RCC_GPIOB_CLK_DISABLE();
+	init.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &init);
 
-	ASSERT_ASSERTS(HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0 | GPIO_PIN_6 | GPIO_PIN_14, GPIO_PIN_SET));
+	ASSERT_ASSERTS(RLM3_Task_Take());
+	RLM3_Task_Take();
 }
 
-TEST_CASE(HAL_GPIO_ReadPin_HappyCase)
-{
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	GPIO_InitTypeDef init = {};
-	init.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_6 | GPIO_PIN_14;
-	init.Mode = GPIO_MODE_INPUT;
-	init.Pull = GPIO_NOPULL;
-	init.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOB, &init);
-
-	SIM_GPIO_Write(GPIOB, GPIO_PIN_0 | GPIO_PIN_6 | GPIO_PIN_14, true);
-	ASSERT(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0) == GPIO_PIN_SET);
-	ASSERT(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == GPIO_PIN_RESET);
-	ASSERT(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_SET);
-
-	SIM_GPIO_Write(GPIOB, GPIO_PIN_0 | GPIO_PIN_6, false);
-	ASSERT(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0) == GPIO_PIN_RESET);
-	ASSERT(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == GPIO_PIN_RESET);
-	ASSERT(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_SET);
-}
-
-TEST_CASE(HAL_GPIO_ReadPin_DisabledClock)
-{
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	GPIO_InitTypeDef init = {};
-	init.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_6 | GPIO_PIN_14;
-	init.Mode = GPIO_MODE_INPUT;
-	init.Pull = GPIO_NOPULL;
-	init.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOB, &init);
-	__HAL_RCC_GPIOB_CLK_DISABLE();
-
-	ASSERT_ASSERTS(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0));
-}
-
-TEST_CASE(HAL_GPIO_ReadPin_DisabledPin)
-{
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-
-	ASSERT_ASSERTS(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6));
-}
-
-TEST_CASE(HAL_GPIO_ReadPin_MultiplePins)
-{
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	GPIO_InitTypeDef init = {};
-	init.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_6 | GPIO_PIN_14;
-	init.Mode = GPIO_MODE_INPUT;
-	init.Pull = GPIO_NOPULL;
-	init.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOB, &init);
-
-	ASSERT_ASSERTS(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0 | GPIO_PIN_1));
-}
-
+ */

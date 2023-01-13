@@ -1,7 +1,16 @@
 #include "Test.hpp"
 #include "rlm3-random.h"
+#include "rlm3-task.h"
+#include "rlm3-sim.hpp"
 #include <algorithm>
 
+
+std::vector<uint32_t> g_entropy;
+
+extern void RLM3_Random_CB_ISR(uint32_t entropy)
+{
+	g_entropy.push_back(entropy);
+}
 
 TEST_CASE(Random_Init_HappyCase)
 {
@@ -30,41 +39,21 @@ TEST_CASE(Random_Deinit_NeverInit)
 
 TEST_CASE(Random_Get_HappyCase)
 {
-	uint8_t buffer[32 * 1024] = { 0 };
+	SIM_Random_Add(1234);
+	SIM_Random_Add(3579);
+	SIM_AddInterrupt([]() { SIM_Give(); });
 
 	RLM3_Random_Init();
-	RLM3_Random_Get(buffer, sizeof(buffer));
+	while (g_entropy.size() < 2)
+		RLM3_Task_Take();
 	RLM3_Random_Deinit();
 
-	std::sort(buffer, buffer + sizeof(buffer));
-
-	for (size_t i = 0; i < sizeof(buffer); i++)
-	{
-		double percent = 1.0 * i / (sizeof(buffer) - 1);
-		double min = (percent - 0.05) * 255;
-		double max = (percent + 0.05) * 255;
-		ASSERT(min <= buffer[i] && buffer[i] <= max);
-	}
+	ASSERT(g_entropy.size() == 2);
+	ASSERT(g_entropy[0] == 1234);
+	ASSERT(g_entropy[1] == 3579);
 }
 
-TEST_CASE(Random_Get_NotInitialized)
+TEST_SETUP(Random_Setup)
 {
-	uint8_t buffer[32 * 1024] = { 0 };
-
-	ASSERT_ASSERTS(RLM3_Random_Get(buffer, sizeof(buffer)));
-}
-
-TEST_CASE(Random_Get_AddedValues)
-{
-	SIM_Random_Add((const uint8_t*)"ABCD", 4);
-	RLM3_Random_Init();
-
-	uint8_t buffer[6] = {};
-	RLM3_Random_Get(buffer, 6);
-
-	ASSERT(buffer[0] == 'A');
-	ASSERT(buffer[1] == 'B');
-	ASSERT(buffer[2] == 'C');
-	ASSERT(buffer[3] == 'D');
-	ASSERT(buffer[4] != 0 || buffer[5] != 0);
+	g_entropy.clear();
 }

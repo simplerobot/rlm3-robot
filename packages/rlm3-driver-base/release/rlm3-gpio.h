@@ -48,6 +48,11 @@ extern void RLM3_GPIO_WifiBootMode_SetHigh();
 extern void RLM3_GPIO_WifiBootMode_SetLow();
 extern bool RLM3_GPIO_WifiBootMode_IsHigh();
 extern bool RLM3_GPIO_WifiBootMode_IsLow();
+extern void RLM3_GPIO_WifiReset_SetHigh();
+extern void RLM3_GPIO_WifiReset_SetLow();
+extern bool RLM3_GPIO_WifiReset_IsHigh();
+extern bool RLM3_GPIO_WifiReset_IsLow();
+
 extern bool RLM3_GPIO_BaseSense_IsHigh();
 extern bool RLM3_GPIO_BaseSense_IsLow();
 extern bool RLM3_GPIO_GpsPulse_IsHigh();

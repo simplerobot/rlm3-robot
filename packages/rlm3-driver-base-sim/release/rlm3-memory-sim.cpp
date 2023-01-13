@@ -20,7 +20,7 @@ static bool g_was_used = false;
 static uint8_t* g_memory = NULL; // A buffer allocated 3 times larger than needed.  The outside pages are marked as unreachable and the middle we control separately.
 
 
-extern void RLM3_MEMORY_Init()
+extern void RLM3_Mem_Init()
 {
 	ASSERT(!g_is_initialized);
 	ASSERT(g_memory != NULL);
@@ -30,14 +30,14 @@ extern void RLM3_MEMORY_Init()
 	ASSERT(mprotect_result == 0);
 }
 
-extern void RLM3_MEMORY_Deinit()
+extern void RLM3_Mem_Deinit()
 {
 	ASSERT(g_is_initialized);
 	g_is_initialized = false;
 	::mprotect(g_memory + RLM3_EXTERNAL_MEMORY_SIZE, RLM3_EXTERNAL_MEMORY_SIZE, PROT_NONE);
 }
 
-extern bool RLM3_MEMORY_IsInit()
+extern bool RLM3_Mem_IsInit()
 {
 	return g_is_initialized;
 }
@@ -99,12 +99,12 @@ TEST_START(MEMORY_SETUP)
 	if (g_was_used)
 	{
 		if (!g_is_initialized)
-			RLM3_MEMORY_Init();
+			RLM3_Mem_Init();
 		std::memset(SIM_MEMORY_GetBaseAddress(), 0, RLM3_EXTERNAL_MEMORY_SIZE);
 
 	}
 	if (g_is_initialized)
-		RLM3_MEMORY_Deinit();
+		RLM3_Mem_Deinit();
 }
 
 

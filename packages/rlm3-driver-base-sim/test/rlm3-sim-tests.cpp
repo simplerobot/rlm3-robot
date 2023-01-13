@@ -17,13 +17,13 @@ TEST_CASE(SIM_AddInterrupt_HappyCase)
 
 TEST_CASE(SIM_RLM3_Is_IRQ_FromMainThread)
 {
-	ASSERT(!SIM_RLM3_Is_IRQ());
+	ASSERT(!SIM_IsISR());
 }
 
 TEST_CASE(SIM_RLM3_Is_IRQ_FromInterrupt)
 {
 	SIM_AddInterrupt([]() {
-		ASSERT(SIM_RLM3_Is_IRQ());
+		ASSERT(SIM_IsISR());
 	});
 	SIM_RunNextInterrupt();
 }

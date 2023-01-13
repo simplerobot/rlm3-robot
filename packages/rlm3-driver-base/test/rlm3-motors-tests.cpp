@@ -68,17 +68,20 @@ TEST_CASE(MOTORS_SetWheels_HappyCase)
 
 	ASSERT(ValidateLevels(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
 
-	RLM3_Motors_SetWheels(127, -128);
+	RLM3_Motors_SetWheels(1.0, -1.0);
 	ASSERT(ValidateLevels(1.0, 0.0, 0.0, 1.0, 0.0, 0.0));
 
-	RLM3_Motors_SetWheels(64, -33);
+	RLM3_Motors_SetWheels(0.5, -0.25);
 	ASSERT(ValidateLevels(0.5, 0.0, 0.0, 0.25, 0.0, 0.0));
 
-	RLM3_Motors_SetWheels(-33, 64);
+	RLM3_Motors_SetWheels(-0.25, 0.5);
 	ASSERT(ValidateLevels(0.0, 0.25, 0.5, 0.0, 0.0, 0.0));
 
-	RLM3_Motors_SetWheels(-128, 127);
+	RLM3_Motors_SetWheels(-1.0, 1.0);
 	ASSERT(ValidateLevels(0.0, 1.0, 1.0, 0.0, 0.0, 0.0));
+
+	RLM3_Motors_SetWheels(0.0, 0.0);
+	ASSERT(ValidateLevels(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
 }
 
 TEST_CASE(MOTORS_SetWheels_Reenable)
@@ -86,12 +89,49 @@ TEST_CASE(MOTORS_SetWheels_Reenable)
 	RLM3_GPIO_Init();
 	RLM3_Motors_Init();
 	RLM3_Motors_Enable();
-	RLM3_Motors_SetWheels(127, -128);
+	RLM3_Motors_SetWheels(1.0, -1.0);
 	RLM3_Motors_Disable();
 	RLM3_Motors_Enable();
 
 	ASSERT(ValidateLevels(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
 }
+
+TEST_CASE(MOTORS_SetBlade_HappyCase)
+{
+	RLM3_GPIO_Init();
+	RLM3_Motors_Init();
+	RLM3_Motors_Enable();
+
+	ASSERT(ValidateLevels(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+
+	RLM3_Motors_SetBlade(1.0);
+	ASSERT(ValidateLevels(0.0, 0.0, 0.0, 0.0, 1.0, 0.0));
+
+	RLM3_Motors_SetBlade(0.5);
+	ASSERT(ValidateLevels(0.0, 0.0, 0.0, 0.0, 0.5, 0.0));
+
+	RLM3_Motors_SetBlade(0.0);
+	ASSERT(ValidateLevels(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+
+	RLM3_Motors_SetBlade(-0.5);
+	ASSERT(ValidateLevels(0.0, 0.0, 0.0, 0.0, 0.0, 0.5));
+
+	RLM3_Motors_SetBlade(-1.0);
+	ASSERT(ValidateLevels(0.0, 0.0, 0.0, 0.0, 0.0, 1.0));
+}
+
+TEST_CASE(MOTORS_SetBlade_Reenable)
+{
+	RLM3_GPIO_Init();
+	RLM3_Motors_Init();
+	RLM3_Motors_Enable();
+	RLM3_Motors_SetBlade(1.0);
+	RLM3_Motors_Disable();
+	RLM3_Motors_Enable();
+
+	ASSERT(ValidateLevels(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+}
+
 
 
 TEST_TEARDOWN(MOTORS_Teardown)

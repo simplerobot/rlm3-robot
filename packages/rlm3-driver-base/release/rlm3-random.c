@@ -33,7 +33,7 @@ extern bool RLM3_Random_IsInit()
 	return __HAL_RCC_RNG_IS_CLK_ENABLED();
 }
 
-extern __weak void RLM3_Random_CB_ISR(uint32_t entropy)
+extern __attribute__((weak)) void RLM3_Random_CB_ISR(uint32_t entropy)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 	ASSERT(false);
