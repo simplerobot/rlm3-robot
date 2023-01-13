@@ -27,7 +27,7 @@ TEST_CASE(Flash_Write_HappyCase)
 		block[0] = i;
 		for (size_t j = 0; j < 16; j++)
 			block[1 + j] = data[i + j];
-		SIM_RLM3_I2C1_Transmit(0x50 | (i >> 8), block, 17);
+		SIM_I2C_Transmit(RLM3_I2C_DEVICE_FLASH, 0x50 | (i >> 8), block, 17);
 	}
 
 	RLM3_Flash_Init();
@@ -51,7 +51,7 @@ TEST_CASE(Flash_Write_Failure)
 	uint8_t block[17] = {};
 	for (size_t j = 0; j < 16; j++)
 		block[1 + j] = data[j];
-	SIM_RLM3_I2C1_TransmitFailure(0x50, block, 17);
+	SIM_I2C_TransmitFailure(RLM3_I2C_DEVICE_FLASH, 0x50, block, 17);
 
 	RLM3_Flash_Init();
 	ASSERT(!RLM3_Flash_Write(0, data, RLM3_FLASH_SIZE));
@@ -97,15 +97,15 @@ TEST_CASE(Flash_Write_PartialBlocks)
 	block[0] = 7;
 	for (size_t j = 0; j < 9; j++)
 		block[1 + j] = data[7 + j];
-	SIM_RLM3_I2C1_Transmit(0x50, block, 10);
+	SIM_I2C_Transmit(RLM3_I2C_DEVICE_FLASH, 0x50, block, 10);
 	block[0] = 16;
 	for (size_t j = 0; j < 16; j++)
 		block[1 + j] = data[16 + j];
-	SIM_RLM3_I2C1_Transmit(0x50, block, 17);
+	SIM_I2C_Transmit(RLM3_I2C_DEVICE_FLASH, 0x50, block, 17);
 	block[0] = 32;
 	for (size_t j = 0; j < 5; j++)
 		block[1 + j] = data[32 + j];
-	SIM_RLM3_I2C1_Transmit(0x50, block, 6);
+	SIM_I2C_Transmit(RLM3_I2C_DEVICE_FLASH, 0x50, block, 6);
 
 	RLM3_Flash_Init();
 	ASSERT(RLM3_Flash_Write(7, data + 7, 9 + 16 + 5));
@@ -118,7 +118,7 @@ TEST_CASE(Flash_Read_HappyCase)
 	for (uint8_t& x : expected_data)
 		x = random();
 	uint8_t byte_address = 0;
-	SIM_RLM3_I2C1_TransmitReceive(0x50, &byte_address, 1, expected_data, RLM3_FLASH_SIZE);
+	SIM_I2C_TransmitReceive(RLM3_I2C_DEVICE_FLASH, 0x50, &byte_address, 1, expected_data, RLM3_FLASH_SIZE);
 
 	RLM3_Flash_Init();
 	uint8_t actual_data[RLM3_FLASH_SIZE] = {};
@@ -137,7 +137,7 @@ TEST_CASE(Flash_Read_NotInitialized)
 TEST_CASE(Flash_Read_Failure)
 {
 	uint8_t byte_address = 0;
-	SIM_RLM3_I2C1_TransmitReceiveFailure(0x50, &byte_address, 1);
+	SIM_I2C_TransmitReceiveFailure(RLM3_I2C_DEVICE_FLASH, 0x50, &byte_address, 1);
 
 	RLM3_Flash_Init();
 	uint8_t actual_data[RLM3_FLASH_SIZE] = {};
@@ -173,7 +173,7 @@ TEST_CASE(Flash_Read_PartialBlock)
 		x = random();
 
 	uint8_t byte_address = 7;
-	SIM_RLM3_I2C1_TransmitReceive(0x50, &byte_address, 1, expected_data, 9 + 16 + 5);
+	SIM_I2C_TransmitReceive(RLM3_I2C_DEVICE_FLASH, 0x50, &byte_address, 1, expected_data, 9 + 16 + 5);
 
 	RLM3_Flash_Init();
 	uint8_t actual_data[9 + 16 + 5] = {};

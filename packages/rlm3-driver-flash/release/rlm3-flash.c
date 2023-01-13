@@ -20,18 +20,18 @@ LOGGER_ZONE(FLASH);
 extern void RLM3_Flash_Init()
 {
 	LOG_TRACE("INIT");
-	RLM3_I2C1_Init(RLM3_I2C1_DEVICE_FLASH);
+	RLM3_I2C_Init(RLM3_I2C_DEVICE_FLASH);
 }
 
 extern void RLM3_Flash_Deinit()
 {
 	LOG_TRACE("DEINIT");
-	RLM3_I2C1_Deinit(RLM3_I2C1_DEVICE_FLASH);
+	RLM3_I2C_Deinit(RLM3_I2C_DEVICE_FLASH);
 }
 
 extern bool RLM3_Flash_IsInit()
 {
-	return RLM3_I2C1_IsInit(RLM3_I2C1_DEVICE_FLASH);
+	return RLM3_I2C_IsInit(RLM3_I2C_DEVICE_FLASH);
 }
 
 static bool FlashWritePage(uint32_t flash_address, const uint8_t* data, size_t size)
@@ -52,9 +52,9 @@ static bool FlashWritePage(uint32_t flash_address, const uint8_t* data, size_t s
 	memcpy(message + 1, data, size);
 
 	uint8_t block_addr = RLM3_FLASH_I2C_ADDRESS | (uint8_t)(flash_address >> 8);
-	bool result = RLM3_I2C1_Transmit(block_addr, message, 1 + size);
+	bool result = RLM3_I2C_Transmit(RLM3_I2C_DEVICE_FLASH, block_addr, message, 1 + size);
 
-	RLM3_Delay(RLM3_FLASH_MAX_WRITE_CYCLE_TIME_MS);
+	RLM3_Task_Delay(RLM3_FLASH_MAX_WRITE_CYCLE_TIME_MS);
 
 	return result;
 }
@@ -100,5 +100,5 @@ extern bool RLM3_Flash_Read(uint32_t flash_address, uint8_t* data, size_t size)
 	uint8_t block_addr = RLM3_FLASH_I2C_ADDRESS | (uint8_t)(flash_address >> 8);
 	uint8_t byte_addr = (uint8_t)flash_address;
 
-	return RLM3_I2C1_TransmitReceive(block_addr, &byte_addr, 1, data, size);
+	return RLM3_I2C_TransmitReceive(RLM3_I2C_DEVICE_FLASH, block_addr, &byte_addr, 1, data, size);
 }

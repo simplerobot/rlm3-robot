@@ -2,8 +2,8 @@ DEPS += build-scripts
 DEPS += logger
 DEPS += test
 DEPS += test-stm32
+DEPS += rlm-base
 DEPS += rlm3-hardware
-DEPS += rlm3-base
 DEPS += rlm3-driver-base
 DEPS += rlm3-driver-base-sim
 DEPS += hw-test-agent
@@ -19,8 +19,8 @@ MCU_SZ = $(MCU_TOOLCHAIN_PATH)size
 MCU_HX = $(MCU_TOOLCHAIN_PATH)objcopy -O ihex
 MCU_BN = $(MCU_TOOLCHAIN_PATH)objcopy -O binary -S
 
-MCU_CFLAGS = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fdata-sections -ffunction-sections -Wall -Werror -DUSE_HAL_DRIVER -DSTM32F427xx -DTEST -DUSE_FULL_ASSERT=1 -fexceptions -g -Og -gdwarf-2
-MCU_CLIBS = -lc -lm -lstdc++
+MCU_CFLAGS = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fdata-sections -fno-exceptions -ffunction-sections -Wall -Werror -DUSE_HAL_DRIVER -DSTM32F427xx -DTEST -DUSE_FULL_ASSERT=1 -g -Og -gdwarf-2
+MCU_CLIBS = -lc -lm -lnosys
 
 CPU_TEST_BUILD_DIR = $(BUILD_DIR)/test-cpu
 CPU_TEST_SOURCE_DIR = test-cpu
@@ -31,7 +31,7 @@ CPU_INCLUDES = $(CPU_TEST_SOURCE_DIRS:%=-I%)
 
 MCU_TEST_BUILD_DIR = $(BUILD_DIR)/test-mcu
 MCU_TEST_SOURCE_DIR = test-mcu
-MCU_TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(MCU_TEST_SOURCE_DIR) $(PKG_LOGGER_DIR) $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM3_BASE_DIR) $(PKG_TEST_STM32_DIR) $(PKG_RLM3_DRIVER_BASE_DIR)
+MCU_TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(MCU_TEST_SOURCE_DIR) $(PKG_LOGGER_DIR) $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM_BASE_DIR) $(PKG_TEST_STM32_DIR) $(PKG_RLM3_DRIVER_BASE_DIR)
 MCU_TEST_SOURCE_FILES = $(notdir $(wildcard $(MCU_TEST_SOURCE_DIRS:%=%/*.c) $(MCU_TEST_SOURCE_DIRS:%=%/*.cpp) $(MCU_TEST_SOURCE_DIRS:%=%/*.s)))
 MCU_TEST_O_FILES = $(addsuffix .o,$(basename $(MCU_TEST_SOURCE_FILES)))
 MCU_TEST_LD_FILE = $(wildcard $(PKG_RLM3_HARDWARE_DIR)/*.ld)
