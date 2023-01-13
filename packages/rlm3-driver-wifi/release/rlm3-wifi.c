@@ -2,10 +2,12 @@
 #include "rlm3-uart.h"
 #include "rlm3-gpio.h"
 #include "rlm3-task.h"
-#include "rlm3-string.h"
+#include "rlm3-debug.h"
 #include "logger.h"
 #include "Assert.h"
 #include <stdarg.h>
+
+#include "rlm-string.h"
 
 
 LOGGER_ZONE(WIFI);
@@ -120,7 +122,7 @@ static void BeginCommand()
 {
 	ASSERT(g_client_thread == NULL);
 	g_command_flags = 0;
-	g_client_thread = RLM3_GetCurrentTask();
+	g_client_thread = RLM3_Task_GetCurrent();
 }
 
 static void EndCommand()
@@ -130,11 +132,11 @@ static void EndCommand()
 
 static bool WaitForResponse(const char* action, uint32_t timeout, uint32_t pass_command_flags, uint32_t fail_command_flags)
 {
-	RLM3_Time start_time = RLM3_GetCurrentTime();
+	RLM3_Time start_time = RLM3_Time_Get();
 
 	// Wait until the server notifies us of one of the monitored commands.
 	uint32_t monitored_command_flags = pass_command_flags | fail_command_flags;
-	while ((g_command_flags & monitored_command_flags) == 0 && RLM3_TakeUntil(start_time, timeout))
+	while ((g_command_flags & monitored_command_flags) == 0 && RLM3_Task_TakeUntil(start_time, timeout))
 		;
 
 	if ((g_command_flags & fail_command_flags) != 0)
@@ -159,9 +161,9 @@ static void SendRaw(const uint8_t* buffer, size_t size)
 	g_raw_transmit_count = size;
 	const char* data = (const char*)buffer;
 	g_transmit_data = &data;
-	RLM3_UART4_EnsureTransmit();
+	RLM3_UART_WIFI_Send();
 	while (g_transmit_data != NULL)
-		RLM3_Take();
+		RLM3_Task_Take();
 }
 
 static void SendV(const char* action, va_list args)
@@ -182,9 +184,9 @@ static void SendV(const char* action, va_list args)
 
 	g_raw_transmit_count = 0;
 	g_transmit_data = command_data;
-	RLM3_UART4_EnsureTransmit();
+	RLM3_UART_WIFI_Send();
 	while (g_transmit_data != NULL)
-		RLM3_Take();
+		RLM3_Task_Take();
 }
 
 static void __attribute__((sentinel)) Send(const char* action, ...)
@@ -213,7 +215,7 @@ static bool __attribute__((sentinel)) SendCommandStandard(const char* action, ui
 static void NotifyCommand(Command command)
 {
 	g_command_flags |= FLAG(command);
-	RLM3_GiveFromISR(g_client_thread);
+	RLM3_Task_GiveISR(g_client_thread);
 }
 
 static void NotifyConnectToServer(size_t link_id)
@@ -246,20 +248,14 @@ static void NotifyDisconnectFromAllServers()
 extern bool RLM3_WIFI_Init()
 {
 	ASSERT(COMMAND_COUNT < 32);
+	ASSERT(RLM3_GPIO_IsInit());
 
-	if (RLM3_UART4_IsInit())
-		RLM3_UART4_Deinit();
+	if (RLM3_UART_WIFI_IsInit())
+		RLM3_UART_WIFI_Deinit();
 
-	__HAL_RCC_GPIOG_CLK_ENABLE();
-
-	HAL_GPIO_WritePin(GPIOG, WIFI_ENABLE_Pin | WIFI_BOOT_MODE_Pin | WIFI_RESET_Pin, GPIO_PIN_RESET);
-
-	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
-	GPIO_InitStruct.Pin = WIFI_ENABLE_Pin | WIFI_BOOT_MODE_Pin | WIFI_RESET_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+	RLM3_GPIO_WifiEnable_SetLow();
+	RLM3_GPIO_WifiReset_SetLow();
+	RLM3_GPIO_WifiBootMode_SetLow();
 
 	g_transmit_data = NULL;
 	g_state = STATE_INITIAL;
@@ -283,15 +279,15 @@ extern bool RLM3_WIFI_Init()
 	g_error_count = 0;
 #endif
 
-	HAL_GPIO_WritePin(GPIOG, WIFI_BOOT_MODE_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOG, WIFI_RESET_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOG, WIFI_ENABLE_Pin, GPIO_PIN_SET);
-	RLM3_Delay(10);
+	RLM3_GPIO_WifiBootMode_SetHigh();
+	RLM3_GPIO_WifiReset_SetLow();
+	RLM3_GPIO_WifiEnable_SetHigh();
+	RLM3_Task_Delay(10);
 
-	HAL_GPIO_WritePin(GPIOG, WIFI_RESET_Pin, GPIO_PIN_SET);
-	RLM3_Delay(990);
+	RLM3_GPIO_WifiReset_SetHigh();
+	RLM3_Task_Delay(990);
 
-	RLM3_UART4_Init(115200);
+	RLM3_UART_WIFI_Init(115200);
 
 	bool result = true;
 	if (result)
@@ -312,12 +308,13 @@ extern bool RLM3_WIFI_Init()
 
 extern void RLM3_WIFI_Deinit()
 {
-	RLM3_UART4_Deinit();
+	RLM3_UART_WIFI_Deinit();
 
 	NotifyDisconnectFromAllServers();
 
-	HAL_GPIO_WritePin(GPIOG, WIFI_ENABLE_Pin | WIFI_BOOT_MODE_Pin | WIFI_RESET_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_DeInit(GPIOG, WIFI_ENABLE_Pin | WIFI_BOOT_MODE_Pin | WIFI_RESET_Pin);
+	RLM3_GPIO_WifiEnable_SetLow();
+	RLM3_GPIO_WifiReset_SetLow();
+	RLM3_GPIO_WifiBootMode_SetLow();
 
 #ifdef TEST
 	LOG_ALWAYS("Invalid %d Error %d", (int)g_invalid_count, (int)g_error_count);
@@ -326,7 +323,7 @@ extern void RLM3_WIFI_Deinit()
 
 extern bool RLM3_WIFI_IsInit()
 {
-	return RLM3_UART4_IsInit();
+	return RLM3_UART_WIFI_IsInit();
 }
 
 extern bool RLM3_WIFI_GetVersion(uint32_t* at_version, uint32_t* sdk_version)
@@ -447,7 +444,7 @@ extern bool RLM3_WIFI_LocalNetworkEnable(const char* ssid, const char* password,
 	if (max_clients > RLM3_WIFI_LINK_COUNT)
 		max_clients = RLM3_WIFI_LINK_COUNT;
 	char max_clients_str[2];
-	RLM3_Format(max_clients_str, sizeof(max_clients_str), "%u", (unsigned int)max_clients);
+	RLM_Format(max_clients_str, sizeof(max_clients_str), "%u", (unsigned int)max_clients);
 
 	bool result = true;
 
@@ -492,7 +489,7 @@ extern bool RLM3_WIFI_Transmit2(size_t link_id, const uint8_t* data_a, size_t si
 	if (0 >= size || size > 1024)
 		return false;
 	char size_str[5];
-	RLM3_Format(size_str, sizeof(size_str), "%u", (unsigned int)size);
+	RLM_Format(size_str, sizeof(size_str), "%u", (unsigned int)size);
 	char link_id_str[2] = { 0 };
 	link_id_str[0] = '0' + link_id;
 
@@ -522,10 +519,10 @@ extern bool RLM3_WIFI_Transmit(size_t link_id, const uint8_t* data, size_t size)
 	return RLM3_WIFI_Transmit2(link_id, data, size, NULL, 0);
 }
 
-extern void RLM3_UART4_ReceiveCallback(uint8_t x)
+extern void RLM3_UART_WIFI_Receive_CB_ISR(uint8_t x)
 {
 	if (IS_LOG_TRACE() && x != '\r')
-		RLM3_DebugOutputFromISR(x);
+		RLM3_Debug_OutputISR(x);
 
 	// If we are expecting something specific, make sure that's what we get.
 	if (g_expected != NULL)
@@ -781,7 +778,7 @@ extern void RLM3_UART4_ReceiveCallback(uint8_t x)
 	g_state = next;
 }
 
-extern bool RLM3_UART4_TransmitCallback(uint8_t* data_to_send)
+extern bool RLM3_UART_WIFI_Transmit_CB_ISR(uint8_t* data_to_send)
 {
 	if (g_transmit_data == NULL)
 		return false;
@@ -792,7 +789,7 @@ extern bool RLM3_UART4_TransmitCallback(uint8_t* data_to_send)
 	(*g_transmit_data)++;
 
 	if (IS_LOG_TRACE() && x != '\r')
-		RLM3_DebugOutputFromISR(x);
+		RLM3_Debug_OutputISR(x);
 
 	// If this is binary data, we only have one buffer and we are done when it is sent.
 	if (g_raw_transmit_count > 0)
@@ -801,7 +798,7 @@ extern bool RLM3_UART4_TransmitCallback(uint8_t* data_to_send)
 		if (--g_raw_transmit_count == 0)
 		{
 			g_transmit_data = NULL;
-			RLM3_GiveFromISR(g_client_thread);
+			RLM3_Task_GiveISR(g_client_thread);
 		}
 	}
 	else
@@ -810,14 +807,14 @@ extern bool RLM3_UART4_TransmitCallback(uint8_t* data_to_send)
 		if (**g_transmit_data == 0 && *(++g_transmit_data) == NULL)
 		{
 			g_transmit_data = NULL;
-			RLM3_GiveFromISR(g_client_thread);
+			RLM3_Task_GiveISR(g_client_thread);
 		}
 	}
 
 	return true;
 }
 
-extern void RLM3_UART4_ErrorCallback(uint32_t status_flags)
+extern void RLM3_UART_WIFI_Error_CB_ISR(uint32_t status_flags)
 {
 	LOG_WARN("UART Error %x", (int)status_flags);
 	g_state = STATE_INVALID;

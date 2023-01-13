@@ -15,11 +15,7 @@ BN = $(TOOLCHAIN_PATH)objcopy -O binary -S
 
 MCU = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard 
 OPTIONS = -fdata-sections -ffunction-sections -fno-exceptions -Wall -Werror -DUSE_FULL_ASSERT=1
-
-LIBRARIES = \
-	-lc \
-	-lm \
-	-lnosys
+LIBRARIES = -lc -lm -lnosys
 
 DEFINES = \
 	-DUSE_HAL_DRIVER \

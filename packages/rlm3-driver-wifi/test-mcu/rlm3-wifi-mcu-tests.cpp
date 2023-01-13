@@ -1,6 +1,7 @@
-#include "Test.hpp"
+#include "Test.h"
 #include "rlm3-wifi.h"
 #include "rlm3-task.h"
+#include "rlm3-gpio.h"
 #include "logger.h"
 #include <cstring>
 #include <initializer_list>
@@ -40,6 +41,7 @@ extern void RLM3_WIFI_NetworkDisconnect_Callback(size_t link_id, bool local_conn
 
 TEST_CASE(RLM3_WIFI_Lifecycle)
 {
+	RLM3_GPIO_Init();
 	ASSERT(!RLM3_WIFI_IsInit());
 	ASSERT(RLM3_WIFI_Init());
 	ASSERT(RLM3_WIFI_IsInit());
@@ -49,6 +51,7 @@ TEST_CASE(RLM3_WIFI_Lifecycle)
 
 TEST_CASE(RLM3_WIFI_GetVersion_HappyCase)
 {
+	RLM3_GPIO_Init();
 	ASSERT(RLM3_WIFI_Init());
 	uint32_t at_version = 0;
 	uint32_t sdk_version = 0;
@@ -61,6 +64,7 @@ TEST_CASE(RLM3_WIFI_GetVersion_HappyCase)
 
 TEST_CASE(RLM3_WIFI_NetworkConnect_HappyCase)
 {
+	RLM3_GPIO_Init();
 	ASSERT(!RLM3_WIFI_IsNetworkConnected());
 	ASSERT(RLM3_WIFI_Init());
 	ASSERT(!RLM3_WIFI_IsNetworkConnected());
@@ -73,6 +77,7 @@ TEST_CASE(RLM3_WIFI_NetworkConnect_HappyCase)
 
 TEST_CASE(RLM3_WIFI_ServerConnect_HappyCase)
 {
+	RLM3_GPIO_Init();
 	ASSERT(RLM3_WIFI_Init());
 	ASSERT(RLM3_WIFI_NetworkConnect("simplerobots", "gKFAED2xrf258vEp"));
 	ASSERT(!RLM3_WIFI_IsServerConnected(2));
@@ -85,6 +90,7 @@ TEST_CASE(RLM3_WIFI_ServerConnect_HappyCase)
 
 TEST_CASE(RLM3_WIFI_SendReceive)
 {
+	RLM3_GPIO_Init();
 	ASSERT(RLM3_WIFI_Init());
 	ASSERT(RLM3_WIFI_NetworkConnect("simplerobots", "gKFAED2xrf258vEp"));
 	ASSERT(!RLM3_WIFI_IsServerConnected(2));
@@ -93,7 +99,7 @@ TEST_CASE(RLM3_WIFI_SendReceive)
 	g_recv_count = 0;
 	const char* command = "GET /\r\n";
 	RLM3_WIFI_Transmit(2, (const uint8_t*)command, std::strlen(command));
-	RLM3_Delay(1000);
+	RLM3_Task_Delay(1000);
 	RLM3_WIFI_ServerDisconnect(2);
 	ASSERT(!RLM3_WIFI_IsServerConnected(2));
 	RLM3_WIFI_Deinit();
@@ -104,6 +110,7 @@ TEST_CASE(RLM3_WIFI_SendReceive)
 
 TEST_CASE(RLM3_WIFI_LocalServer_HappyCase)
 {
+	RLM3_GPIO_Init();
 	ASSERT(RLM3_WIFI_Init());
 	ASSERT(!RLM3_WIFI_IsLocalNetworkEnabled());
 	ASSERT(RLM3_WIFI_LocalNetworkEnable("SimpleRobots1234", "2o70jQcB", 2, "192.168.1.1", "80"));
@@ -116,4 +123,12 @@ TEST_CASE(RLM3_WIFI_LocalServer_HappyCase)
 TEST_SETUP(WIFI_LOGGING)
 {
 	logger_set_level("WIFI", LOGGER_LEVEL_TRACE);
+}
+
+TEST_TEARDOWN(WIFI_Teardown)
+{
+	if (RLM3_WIFI_IsInit())
+		RLM3_WIFI_Deinit();
+	if (RLM3_GPIO_IsInit())
+		RLM3_GPIO_DeInit();
 }
