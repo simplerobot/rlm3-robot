@@ -52,6 +52,8 @@ extern void SIM_WIFI_ReceiveBytes(size_t link_id, const uint8_t* bytes, size_t s
 extern void SIM_WIFI_Connect(size_t link_id);
 extern void SIM_WIFI_Disconnect(size_t link_id);
 
+extern void SIM_WIFI_IgnoreGpio();
+
 
 #ifdef __cplusplus
 }

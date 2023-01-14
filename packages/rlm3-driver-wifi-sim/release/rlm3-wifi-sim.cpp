@@ -24,6 +24,8 @@ static std::string g_local_ip_address;
 static std::string g_local_service;
 static bool g_is_local_network_enabled;
 
+static bool g_ignore_gpio_init = false;
+
 struct ServerSettings
 {
 	bool has_server;
@@ -35,7 +37,7 @@ struct ServerSettings
 };
 static ServerSettings g_server_settings[RLM3_WIFI_LINK_COUNT];
 
-TEST_SETUP(SIM_WIFI_Init)
+TEST_SETUP(SIM_WIFI_Setup)
 {
 	g_is_active = false;
 	g_fail_init = false;
@@ -53,9 +55,14 @@ TEST_SETUP(SIM_WIFI_Init)
 	}
 }
 
+TEST_TEARDOWN(SIM_WIFI_Teardown)
+{
+	g_ignore_gpio_init = false;
+}
+
 extern bool RLM3_WIFI_Init()
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(!g_is_active);
 	if (g_fail_init)
 		return false;
@@ -65,7 +72,7 @@ extern bool RLM3_WIFI_Init()
 
 extern void RLM3_WIFI_Deinit()
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(g_is_active);
 	g_is_active = false;
 	g_is_network_connected = false;
@@ -75,13 +82,13 @@ extern void RLM3_WIFI_Deinit()
 
 extern bool RLM3_WIFI_IsInit()
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	return g_is_active;
 }
 
 extern bool RLM3_WIFI_GetVersion(uint32_t* at_version, uint32_t* sdk_version)
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(g_is_active);
 	if (!g_has_version)
 		return false;
@@ -92,7 +99,7 @@ extern bool RLM3_WIFI_GetVersion(uint32_t* at_version, uint32_t* sdk_version)
 
 extern bool RLM3_WIFI_NetworkConnect(const char* ssid, const char* password)
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(g_is_active);
 	ASSERT(!g_is_network_connected);
 	if (!g_has_network)
@@ -105,7 +112,7 @@ extern bool RLM3_WIFI_NetworkConnect(const char* ssid, const char* password)
 
 extern void RLM3_WIFI_NetworkDisconnect()
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(g_is_network_connected);
 	g_is_network_connected = false;
 	for (auto& s : g_server_settings)
@@ -114,13 +121,13 @@ extern void RLM3_WIFI_NetworkDisconnect()
 
 extern bool RLM3_WIFI_IsNetworkConnected()
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	return g_is_network_connected;
 }
 
 extern bool RLM3_WIFI_ServerConnect(size_t link_id, const char* server, const char* service)
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
 	ASSERT(g_is_active);
 	ASSERT(g_is_network_connected);
@@ -141,7 +148,7 @@ extern bool RLM3_WIFI_ServerConnect(size_t link_id, const char* server, const ch
 
 extern void RLM3_WIFI_ServerDisconnect(size_t link_id)
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
 	ASSERT(g_is_active);
 	ASSERT(g_is_network_connected);
@@ -156,7 +163,7 @@ extern void RLM3_WIFI_ServerDisconnect(size_t link_id)
 
 extern bool RLM3_WIFI_IsServerConnected(size_t link_id)
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
 	auto& s = g_server_settings[link_id];
 	return s.is_connected;
@@ -164,7 +171,7 @@ extern bool RLM3_WIFI_IsServerConnected(size_t link_id)
 
 extern bool RLM3_WIFI_LocalNetworkEnable(const char* ssid, const char* password, size_t max_clients, const char* ip_address, const char* service)
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(!g_is_local_network_enabled);
 	if (!g_has_local_network)
 		return false;
@@ -179,20 +186,20 @@ extern bool RLM3_WIFI_LocalNetworkEnable(const char* ssid, const char* password,
 
 extern void RLM3_WIFI_LocalNetworkDisable()
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(g_is_local_network_enabled);
 	g_is_local_network_enabled = false;
 }
 
 extern bool RLM3_WIFI_IsLocalNetworkEnabled()
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	return g_is_local_network_enabled;
 }
 
 extern bool RLM3_WIFI_Transmit(size_t link_id, const uint8_t* data, size_t size)
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
 	ASSERT(g_is_active);
 	ASSERT(g_is_network_connected || g_is_local_network_enabled);
@@ -215,7 +222,7 @@ extern bool RLM3_WIFI_Transmit(size_t link_id, const uint8_t* data, size_t size)
 
 extern bool RLM3_WIFI_Transmit2(size_t link_id, const uint8_t* data_a, size_t size_a, const uint8_t* data_b, size_t size_b)
 {
-	ASSERT(RLM3_GPIO_IsInit());
+	ASSERT(g_ignore_gpio_init || RLM3_GPIO_IsInit());
 	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
 	ASSERT(g_is_active);
 	ASSERT(g_is_network_connected || g_is_local_network_enabled);
@@ -265,15 +272,18 @@ extern void SIM_WIFI_NetworkConnect()
 {
 	g_is_active = true;
 	g_is_network_connected = true;
+
+	if (!RLM3_GPIO_IsInit())
+		RLM3_GPIO_Init();
 }
 
 extern void SIM_WIFI_ServerConnect(size_t link_id)
 {
+	SIM_WIFI_NetworkConnect();
+
 	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
 	auto& s = g_server_settings[link_id];
 
-	g_is_active = true;
-	g_is_network_connected = true;
 	s.is_connected = true;
 	s.is_local_connection = false;
 }
@@ -399,4 +409,9 @@ extern void SIM_WIFI_Disconnect(size_t link_id)
 		s.is_connected = false;
 		RLM3_WIFI_NetworkDisconnect_Callback(link_id, s.is_local_connection);
 	});
+}
+
+extern void SIM_WIFI_IgnoreGpio()
+{
+	g_ignore_gpio_init = true;
 }
