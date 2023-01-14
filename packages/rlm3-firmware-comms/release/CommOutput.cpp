@@ -1,9 +1,10 @@
 #include "CommOutput.hpp"
 #include "rlm3-task.h"
 #include "rlm3-wifi.h"
-#include "rlm3-bytes.h"
 #include "CommMessage.hpp"
 #include "Crc8.hpp"
+
+#include "../../rlm-base/release/rlm-bytes.h"
 
 
 static constexpr RLM3_Time SYNC_PACKET_DELAY_MS = 10 * 1000;
@@ -35,7 +36,7 @@ static void SendSyncPacket(Crc8& crc)
 {
 	MESSAGE_BODY_SYNC sync = {};
 	sync.type = MESSAGE_TYPE_SYNC;
-	sync.time = hton_u32(RLM3_GetCurrentTime());
+	sync.time = hton_u32(RLM3_Time_Get());
 	crc.add(&sync, sizeof(sync) - 1);
 	sync.crc = crc.get();
 
@@ -57,8 +58,8 @@ extern void CommOutput_Init()
 
 extern void CommOutput_RunTask()
 {
-	g_task = RLM3_GetCurrentTask();
-	RLM3_Time last_sync_time = RLM3_GetCurrentTime();
+	g_task = RLM3_Task_GetCurrent();
+	RLM3_Time last_sync_time = RLM3_Time_Get();
 	Crc8 crc;
 
 	while (!g_abort)
@@ -75,7 +76,7 @@ extern void CommOutput_RunTask()
 
 				SendVersionPacket(crc);
 				SendSyncPacket(crc);
-				last_sync_time = RLM3_GetCurrentTime();
+				last_sync_time = RLM3_Time_Get();
 			}
 			for (size_t link_id = 0; link_id < RLM3_WIFI_LINK_COUNT; link_id++)
 			{
@@ -87,10 +88,10 @@ extern void CommOutput_RunTask()
 				}
 			}
 		}
-		else if (!RLM3_TakeUntil(last_sync_time, SYNC_PACKET_DELAY_MS))
+		else if (!RLM3_Task_TakeUntil(last_sync_time, SYNC_PACKET_DELAY_MS))
 		{
 			SendSyncPacket(crc);
-			last_sync_time = RLM3_GetCurrentTime();
+			last_sync_time = RLM3_Time_Get();
 		}
 	}
 	g_abort = false;
@@ -100,13 +101,13 @@ extern void CommOutput_RunTask()
 extern void CommOutput_AbortTask()
 {
 	g_abort = true;
-	RLM3_Give(g_task);
+	RLM3_Task_Give(g_task);
 }
 
 extern void CommOutput_AbortTaskISR()
 {
 	g_abort = true;
-	RLM3_GiveFromISR(g_task);
+	RLM3_Task_GiveISR(g_task);
 }
 
 extern void CommOutput_OpenConnectionISR(size_t link_id)
@@ -114,7 +115,7 @@ extern void CommOutput_OpenConnectionISR(size_t link_id)
 	g_link_id = link_id;
 	g_new_connection = true;
 	g_active_task = true;
-	RLM3_GiveFromISR(g_task);
+	RLM3_Task_GiveISR(g_task);
 }
 
 extern void CommOutput_CloseConnectionISR(size_t link_id)
@@ -124,5 +125,5 @@ extern void CommOutput_CloseConnectionISR(size_t link_id)
 	if (link_id < RLM3_WIFI_LINK_COUNT)
 		g_old_connections[link_id] = true;
 	g_active_task = true;
-	RLM3_GiveFromISR(g_task);
+	RLM3_Task_GiveISR(g_task);
 }

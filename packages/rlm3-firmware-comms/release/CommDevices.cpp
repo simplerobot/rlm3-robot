@@ -1,6 +1,7 @@
 #include "CommDevices.hpp"
 #include "rlm3-wifi.h"
 #include "CommInput.hpp"
+#include "CommOutput.hpp"
 
 
 #ifdef MOCK_COMMS

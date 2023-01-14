@@ -2,6 +2,7 @@
 #include "CommOutput.hpp"
 #include "rlm3-sim.hpp"
 #include "rlm3-wifi.h"
+#include "rlm3-gpio.h"
 #include "Crc8.hpp"
 
 
@@ -48,7 +49,7 @@ TEST_CASE(CommOutput_HappyCase)
 	});
 	SIM_AddInterrupt([] { CommOutput_AbortTaskISR(); });
 	SIM_WIFI_ServerConnect(3);
-	RLM3_Delay(0x12345678);
+	RLM3_Task_Delay(0x12345678);
 
 	CommOutput_Init();
 	CommOutput_RunTask();
@@ -78,7 +79,7 @@ TEST_CASE(CommOutput_RegularSync)
 	SIM_AddDelay(25000);
 	SIM_AddInterrupt([] { CommOutput_AbortTaskISR(); });
 	SIM_WIFI_ServerConnect(3);
-	RLM3_Delay(0x12345678);
+	RLM3_Task_Delay(0x12345678);
 
 	CommOutput_Init();
 	CommOutput_RunTask();
@@ -110,6 +111,7 @@ TEST_CASE(CommOutput_CloseConnection_NotOpen)
 	Crc8 crc;
 	SIM_AddInterrupt([] { CommOutput_CloseConnectionISR(3); });
 	SIM_AddInterrupt([] { CommOutput_AbortTaskISR(); });
+	RLM3_GPIO_Init();
 
 	CommOutput_Init();
 	CommOutput_RunTask();

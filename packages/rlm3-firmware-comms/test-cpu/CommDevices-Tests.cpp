@@ -1,6 +1,7 @@
 #include "Test.hpp"
 #include "CommDevices.hpp"
 #include "rlm3-wifi.h"
+#include "rlm3-gpio.h"
 #include "rlm3-sim.hpp"
 #include <queue>
 
@@ -17,6 +18,7 @@ TEST_CASE(CommDevices_Lifecycle)
 {
 	SIM_WIFI_SetLocalNetwork("RLM3", "ABCD1234", 2, "10.168.154.1", "37649");
 
+	RLM3_GPIO_Init();
 	ASSERT(CommDevices_Init());
 	CommDevices_Deinit();
 }
@@ -34,9 +36,10 @@ TEST_CASE(CommDevices_HappyCase)
 	bool done = false;
 	SIM_AddInterrupt([&] { done = true; SIM_Give(); });
 
+	RLM3_GPIO_Init();
 	ASSERT(CommDevices_Init());
 	while (!done)
-		RLM3_Take();
+		RLM3_Task_Take();
 	CommDevices_Deinit();
 }
 
@@ -44,11 +47,13 @@ TEST_CASE(CommDevices_InitFailed)
 {
 	SIM_WIFI_InitFailure();
 
+	RLM3_GPIO_Init();
 	ASSERT(!CommDevices_Init());
 }
 
 TEST_CASE(CommDevices_LocalNetworkFailed)
 {
+	RLM3_GPIO_Init();
 	ASSERT(!CommDevices_Init());
 }
 
@@ -72,9 +77,10 @@ TEST_CASE(CommDevices_SecondConnection)
 	bool done = false;
 	SIM_AddInterrupt([&] { done = true; SIM_Give(); });
 
+	RLM3_GPIO_Init();
 	ASSERT(CommDevices_Init());
 	while (!done)
-		RLM3_Take();
+		RLM3_Task_Take();
 	CommDevices_Deinit();
 }
 
@@ -94,9 +100,10 @@ TEST_CASE(CommDevices_FailedMessage)
 	bool done = false;
 	SIM_AddInterrupt([&] { done = true; SIM_Give(); });
 
+	RLM3_GPIO_Init();
 	ASSERT(CommDevices_Init());
 	while (!done)
-		RLM3_Take();
+		RLM3_Task_Take();
 	CommDevices_Deinit();
 }
 

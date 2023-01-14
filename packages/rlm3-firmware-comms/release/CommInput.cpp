@@ -41,7 +41,7 @@ static int8_t ExtractI8(size_t offset)
 
 extern void CommInput_RunTask()
 {
-	g_task = RLM3_GetCurrentTask();
+	g_task = RLM3_Task_GetCurrent();
 	while (!g_abort)
 	{
 		// Do a single read of the volatile variables.
@@ -98,7 +98,7 @@ extern void CommInput_RunTask()
 		else
 		{
 			// Wait until a message arrives (or until we abort).
-			RLM3_Take();
+			RLM3_Task_Take();
 		}
 	}
 	g_abort = false;
@@ -108,13 +108,13 @@ extern void CommInput_RunTask()
 extern void CommInput_AbortTask()
 {
 	g_abort = true;
-	RLM3_Give(g_task);
+	RLM3_Task_Give(g_task);
 }
 
 extern void CommInput_AbortTaskISR()
 {
 	g_abort = true;
-	RLM3_GiveFromISR(g_task);
+	RLM3_Task_GiveISR(g_task);
 }
 
 extern bool CommInput_PutMessageByteISR(uint8_t byte)
@@ -163,7 +163,7 @@ extern bool CommInput_PutMessageByteISR(uint8_t byte)
 		g_head = next + 1;
 		// Notify the reader task there is now data in the buffer.
 		if (head == tail)
-			RLM3_GiveFromISR(g_task);
+			RLM3_Task_GiveISR(g_task);
 	}
 	else
 	{
