@@ -1,6 +1,7 @@
 #pragma once
 
-#include "rlm3-base.h"
+#include <cstddef>
+#include <cstdint>
 
 
 class Crc8
