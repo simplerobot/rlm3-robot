@@ -18,7 +18,7 @@ static size_t g_network_connect_link_id = 0;
 static size_t g_network_disconnect_link_id = 0;
 
 
-extern void RLM3_WIFI_Receive_Callback(size_t link_id, uint8_t data)
+extern void RLM3_WIFI_Receive_CB_ISR(size_t link_id, uint8_t data)
 {
 	ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
 	auto& link_info = g_link_recv_info[link_id];
@@ -29,14 +29,14 @@ extern void RLM3_WIFI_Receive_Callback(size_t link_id, uint8_t data)
 	RLM3_Task_GiveISR(g_task);
 }
 
-extern void RLM3_WIFI_NetworkConnect_Callback(size_t link_id, bool local_connection)
+extern void RLM3_WIFI_NetworkConnect_CB_ISR(size_t link_id, bool local_connection)
 {
 	g_network_connect_called = true;
 	g_network_connect_link_id = link_id;
 	RLM3_Task_GiveISR(g_task);
 }
 
-extern void RLM3_WIFI_NetworkDisconnect_Callback(size_t link_id, bool local_connection)
+extern void RLM3_WIFI_NetworkDisconnect_CB_ISR(size_t link_id, bool local_connection)
 {
 	g_network_disconnect_called = true;
 	g_network_disconnect_link_id = link_id;

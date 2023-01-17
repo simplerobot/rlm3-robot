@@ -1,4 +1,4 @@
-#include "CommMessage.hpp"
+#include "../../firmware-base/release/CommMessage.hpp"
 
 
 extern const char* ToString(MessageType type)

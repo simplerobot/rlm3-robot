@@ -1,9 +1,8 @@
 #include "Test.hpp"
-#include "CommDevices.hpp"
 #include "rlm3-wifi.h"
-#include "rlm3-gpio.h"
 #include "rlm3-sim.hpp"
 #include <queue>
+#include "../../firmware/main/CommDevices.hpp"
 
 
 static void MOCK_CommInput_Message(uint8_t byte);
@@ -18,7 +17,6 @@ TEST_CASE(CommDevices_Lifecycle)
 {
 	SIM_WIFI_SetLocalNetwork("RLM3", "ABCD1234", 2, "10.168.154.1", "37649");
 
-	RLM3_GPIO_Init();
 	ASSERT(CommDevices_Init());
 	CommDevices_Deinit();
 }
@@ -36,7 +34,6 @@ TEST_CASE(CommDevices_HappyCase)
 	bool done = false;
 	SIM_AddInterrupt([&] { done = true; SIM_Give(); });
 
-	RLM3_GPIO_Init();
 	ASSERT(CommDevices_Init());
 	while (!done)
 		RLM3_Task_Take();
@@ -47,13 +44,11 @@ TEST_CASE(CommDevices_InitFailed)
 {
 	SIM_WIFI_InitFailure();
 
-	RLM3_GPIO_Init();
 	ASSERT(!CommDevices_Init());
 }
 
 TEST_CASE(CommDevices_LocalNetworkFailed)
 {
-	RLM3_GPIO_Init();
 	ASSERT(!CommDevices_Init());
 }
 
@@ -77,7 +72,6 @@ TEST_CASE(CommDevices_SecondConnection)
 	bool done = false;
 	SIM_AddInterrupt([&] { done = true; SIM_Give(); });
 
-	RLM3_GPIO_Init();
 	ASSERT(CommDevices_Init());
 	while (!done)
 		RLM3_Task_Take();
@@ -100,7 +94,6 @@ TEST_CASE(CommDevices_FailedMessage)
 	bool done = false;
 	SIM_AddInterrupt([&] { done = true; SIM_Give(); });
 
-	RLM3_GPIO_Init();
 	ASSERT(CommDevices_Init());
 	while (!done)
 		RLM3_Task_Take();
@@ -167,7 +160,7 @@ static void MOCK_CommOutput_CloseConnection(size_t link_id)
 	g_mock_comm_output_links.push(link_id);
 }
 
-extern bool CommInput_PutMessageByteISR_MOCK(uint8_t byte)
+extern bool CommInput_PutMessageByteISR(uint8_t byte)
 {
 	ASSERT(!g_mock_method.empty());
 	ASSERT(g_mock_method.front() == "Message");
@@ -185,14 +178,14 @@ extern bool CommInput_PutMessageByteISR_MOCK(uint8_t byte)
 	return success;
 }
 
-extern void CommInput_ResetPipeISR_MOCK()
+extern void CommInput_ResetPipeISR()
 {
 	ASSERT(!g_mock_method.empty());
 	ASSERT(g_mock_method.front() == "Reset");
 	g_mock_method.pop();
 }
 
-extern void CommOutput_OpenConnectionISR_MOCK(size_t link_id)
+extern void CommOutput_OpenConnectionISR(size_t link_id)
 {
 	ASSERT(!g_mock_method.empty());
 	ASSERT(g_mock_method.front() == "Open");
@@ -205,7 +198,7 @@ extern void CommOutput_OpenConnectionISR_MOCK(size_t link_id)
 	ASSERT(link_id == expected);
 }
 
-extern void CommOutput_CloseConnectionISR_MOCK(size_t link_id)
+extern void CommOutput_CloseConnectionISR(size_t link_id)
 {
 	ASSERT(!g_mock_method.empty());
 	ASSERT(g_mock_method.front() == "Close");
@@ -218,3 +211,7 @@ extern void CommOutput_CloseConnectionISR_MOCK(size_t link_id)
 	ASSERT(link_id == expected);
 }
 
+TEST_SETUP(CommDevices_Setup)
+{
+	SIM_WIFI_IgnoreGpio();
+}

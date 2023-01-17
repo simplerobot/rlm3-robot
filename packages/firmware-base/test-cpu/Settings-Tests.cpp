@@ -1,5 +1,5 @@
 #include "Test.hpp"
-#include "rlm3-settings.h"
+#include "Settings.h"
 #include "rlm3-flash.h"
 #include "rlm3-memory.h"
 #include <cstdio>

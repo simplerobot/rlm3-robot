@@ -1,7 +1,7 @@
 DEPS += build-scripts
 DEPS += logger
 DEPS += test
-DEPS += rlm3-base
+DEPS += rlm-base
 DEPS += rlm3-driver-base-sim
 DEPS += rlm3-driver-flash-sim
 include ../build-scripts/release/include.make
@@ -11,7 +11,7 @@ CPU_CFLAGS = -Wall -Werror -pthread -DTEST -fsanitize=address -static-libasan -g
 
 CPU_TEST_BUILD_DIR = $(BUILD_DIR)/test-cpu
 CPU_TEST_SOURCE_DIR = test-cpu
-CPU_TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(CPU_TEST_SOURCE_DIR) $(PKG_LOGGER_DIR) $(PKG_TEST_DIR) $(PKG_RLM3_BASE_DIR) $(PKG_RLM3_DRIVER_BASE_SIM_DIR) $(PKG_RLM3_DRIVER_FLASH_SIM_DIR)
+CPU_TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(CPU_TEST_SOURCE_DIR) $(PKG_LOGGER_DIR) $(PKG_TEST_DIR) $(PKG_RLM_BASE_DIR) $(PKG_RLM3_DRIVER_BASE_SIM_DIR) $(PKG_RLM3_DRIVER_FLASH_SIM_DIR)
 CPU_TEST_SOURCE_FILES = $(notdir $(wildcard $(CPU_TEST_SOURCE_DIRS:%=%/*.c) $(CPU_TEST_SOURCE_DIRS:%=%/*.cpp)))
 CPU_TEST_O_FILES = $(addsuffix .o,$(basename $(CPU_TEST_SOURCE_FILES)))
 CPU_INCLUDES = $(CPU_TEST_SOURCE_DIRS:%=-I%)

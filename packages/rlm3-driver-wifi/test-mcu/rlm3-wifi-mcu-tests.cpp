@@ -15,14 +15,14 @@ static uint8_t g_recv_buffer[32];
 static const size_t k_no_network = (size_t)-1;
 static volatile size_t g_local_network = k_no_network;
 
-extern void RLM3_WIFI_Receive_Callback(size_t link_id, uint8_t data)
+extern void RLM3_WIFI_Receive_CB_ISR(size_t link_id, uint8_t data)
 {
 	if (g_recv_count < sizeof(g_recv_buffer))
 		g_recv_buffer[g_recv_count] = data;
 	g_recv_count++;
 }
 
-extern void RLM3_WIFI_NetworkConnect_Callback(size_t link_id, bool local_connection)
+extern void RLM3_WIFI_NetworkConnect_CB_ISR(size_t link_id, bool local_connection)
 {
 	if (!local_connection)
 		return;
@@ -30,7 +30,7 @@ extern void RLM3_WIFI_NetworkConnect_Callback(size_t link_id, bool local_connect
 	g_local_network = link_id;
 }
 
-extern void RLM3_WIFI_NetworkDisconnect_Callback(size_t link_id, bool local_connection)
+extern void RLM3_WIFI_NetworkDisconnect_CB_ISR(size_t link_id, bool local_connection)
 {
 	if (!local_connection)
 		return;

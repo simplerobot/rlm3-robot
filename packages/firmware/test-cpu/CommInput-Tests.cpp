@@ -1,5 +1,5 @@
+#include "../../firmware/main/CommInput.hpp"
 #include "Test.hpp"
-#include "CommInput.hpp"
 #include "rlm3-sim.hpp"
 #include "Crc8.hpp"
 
@@ -236,4 +236,5 @@ TEST_CASE(CommInput_OverflowBuffer)
 
 	ASSERT(g_control_call_count == message_count + 1);
 }
+
 

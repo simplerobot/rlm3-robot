@@ -1,5 +1,5 @@
+#include "../../firmware-base/release/CommMessage.hpp"
 #include "Test.hpp"
-#include "CommMessage.hpp"
 
 
 TEST_CASE(MessageType_None)

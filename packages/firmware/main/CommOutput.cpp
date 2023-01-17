@@ -1,7 +1,8 @@
-#include "CommOutput.hpp"
+#include "../../firmware/main/CommOutput.hpp"
+
+#include "../../firmware-base/release/CommMessage.hpp"
 #include "rlm3-task.h"
 #include "rlm3-wifi.h"
-#include "CommMessage.hpp"
 #include "Crc8.hpp"
 
 #include "../../rlm-base/release/rlm-bytes.h"

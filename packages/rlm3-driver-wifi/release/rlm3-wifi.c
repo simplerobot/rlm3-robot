@@ -224,7 +224,7 @@ static void NotifyConnectToServer(size_t link_id)
 		return;
 	g_tcp_connected[link_id] = true;
 	NotifyCommand((Command)(COMMAND_CONNECT_BEGIN + link_id));
-	RLM3_WIFI_NetworkConnect_Callback(link_id, !g_is_tcp_outgoing[g_number]);
+	RLM3_WIFI_NetworkConnect_CB_ISR(link_id, !g_is_tcp_outgoing[g_number]);
 }
 
 static void NotifyDisconnectFromServer(size_t link_id)
@@ -234,7 +234,7 @@ static void NotifyDisconnectFromServer(size_t link_id)
 	if (!g_tcp_connected[g_number])
 		return;
 	NotifyCommand((Command)(COMMAND_CLOSED_BEGIN + link_id));
-	RLM3_WIFI_NetworkDisconnect_Callback(link_id, !g_is_tcp_outgoing[g_number]);
+	RLM3_WIFI_NetworkDisconnect_CB_ISR(link_id, !g_is_tcp_outgoing[g_number]);
 	g_is_tcp_outgoing[link_id] = false;
 	g_tcp_connected[link_id] = false;
 }
@@ -560,7 +560,7 @@ extern void RLM3_UART_WIFI_Receive_CB_ISR(uint8_t x)
 		break;
 
 	case STATE_READ_DATA:
-		RLM3_WIFI_Receive_Callback(g_number, x);
+		RLM3_WIFI_Receive_CB_ISR(g_number, x);
 		next = STATE_READ_DATA;
 		if (--g_receive_length == 0)
 			next = STATE_INITIAL;
@@ -823,17 +823,17 @@ extern void RLM3_UART_WIFI_Error_CB_ISR(uint32_t status_flags)
 #endif
 }
 
-extern __attribute__((weak)) void RLM3_WIFI_Receive_Callback(size_t link_id, uint8_t data)
+extern __attribute__((weak)) void RLM3_WIFI_Receive_CB_ISR(size_t link_id, uint8_t data)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 }
 
-extern __attribute__((weak)) void RLM3_WIFI_NetworkConnect_Callback(size_t link_id, bool local_connection)
+extern __attribute__((weak)) void RLM3_WIFI_NetworkConnect_CB_ISR(size_t link_id, bool local_connection)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 }
 
-extern __attribute__((weak)) void RLM3_WIFI_NetworkDisconnect_Callback(size_t link_id, bool local_connection)
+extern __attribute__((weak)) void RLM3_WIFI_NetworkDisconnect_CB_ISR(size_t link_id, bool local_connection)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 }

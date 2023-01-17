@@ -20,7 +20,7 @@ std::vector<std::pair<size_t, bool>> g_network_connect_calls;
 std::vector<std::pair<size_t, bool>> g_network_disconnect_calls;
 
 
-extern void RLM3_WIFI_Receive_Callback(size_t link_id, uint8_t data)
+extern void RLM3_WIFI_Receive_CB_ISR(size_t link_id, uint8_t data)
 {
 	ASSERT(link_id == 2);
 	if (g_recv_buffer_count < sizeof(g_recv_buffer_data))
@@ -29,14 +29,14 @@ extern void RLM3_WIFI_Receive_Callback(size_t link_id, uint8_t data)
 	RLM3_Task_GiveISR(g_client_thread);
 }
 
-extern void RLM3_WIFI_NetworkConnect_Callback(size_t link_id, bool local_connection)
+extern void RLM3_WIFI_NetworkConnect_CB_ISR(size_t link_id, bool local_connection)
 {
 	g_network_callback_count++;
 	g_network_connect_calls.emplace_back(link_id, local_connection);
 	RLM3_Task_GiveISR(g_client_thread);
 }
 
-extern void RLM3_WIFI_NetworkDisconnect_Callback(size_t link_id, bool local_connection)
+extern void RLM3_WIFI_NetworkDisconnect_CB_ISR(size_t link_id, bool local_connection)
 {
 	g_network_callback_count++;
 	g_network_disconnect_calls.emplace_back(link_id, local_connection);

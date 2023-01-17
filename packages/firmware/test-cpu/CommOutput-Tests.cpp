@@ -1,8 +1,7 @@
+#include "../../firmware/main/CommOutput.hpp"
 #include "Test.hpp"
-#include "CommOutput.hpp"
 #include "rlm3-sim.hpp"
 #include "rlm3-wifi.h"
-#include "rlm3-gpio.h"
 #include "Crc8.hpp"
 
 
@@ -111,8 +110,12 @@ TEST_CASE(CommOutput_CloseConnection_NotOpen)
 	Crc8 crc;
 	SIM_AddInterrupt([] { CommOutput_CloseConnectionISR(3); });
 	SIM_AddInterrupt([] { CommOutput_AbortTaskISR(); });
-	RLM3_GPIO_Init();
 
 	CommOutput_Init();
 	CommOutput_RunTask();
+}
+
+TEST_SETUP(CommOutput_Setup)
+{
+	SIM_WIFI_IgnoreGpio();
 }

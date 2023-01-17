@@ -141,7 +141,7 @@ extern bool RLM3_WIFI_ServerConnect(size_t link_id, const char* server, const ch
 	s.is_local_connection = false;
 	bool is_local_connection = s.is_local_connection;
 	SIM_DoInterrupt([=] {
-		RLM3_WIFI_NetworkConnect_Callback(link_id, is_local_connection);
+		RLM3_WIFI_NetworkConnect_CB_ISR(link_id, is_local_connection);
 	});
 	return true;
 }
@@ -157,7 +157,7 @@ extern void RLM3_WIFI_ServerDisconnect(size_t link_id)
 	s.is_connected = false;
 	bool is_local_connection = s.is_local_connection;
 	SIM_DoInterrupt([=] {
-		RLM3_WIFI_NetworkDisconnect_Callback(link_id, is_local_connection);
+		RLM3_WIFI_NetworkDisconnect_CB_ISR(link_id, is_local_connection);
 	});
 }
 
@@ -252,21 +252,20 @@ extern bool RLM3_WIFI_Transmit2(size_t link_id, const uint8_t* data_a, size_t si
 	return true;
 }
 
-extern __attribute__((weak)) void RLM3_WIFI_Receive_Callback(uint8_t data)
+extern "C" __attribute__((weak)) void RLM3_WIFI_Receive_CB_ISR(size_t link_id, uint8_t data)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 }
 
-extern __attribute__((weak)) void RLM3_WIFI_NetworkConnect_Callback(size_t link_id, bool local_connection)
+extern "C" __attribute__((weak)) void RLM3_WIFI_NetworkConnect_CB_ISR(size_t link_id, bool local_connection)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 }
 
-extern __attribute__((weak)) void RLM3_WIFI_NetworkDisconnect_Callback(size_t link_id, bool local_connection)
+extern "C" __attribute__((weak)) void RLM3_WIFI_NetworkDisconnect_CB_ISR(size_t link_id, bool local_connection)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 }
-
 
 extern void SIM_WIFI_NetworkConnect()
 {
@@ -360,7 +359,7 @@ extern void SIM_WIFI_Receive(size_t link_id, const char* data)
 		auto& s = g_server_settings[link_id];
 		ASSERT(s.is_connected);
 		for (char c : str)
-			RLM3_WIFI_Receive_Callback(link_id, c);
+			RLM3_WIFI_Receive_CB_ISR(link_id, c);
 	});
 }
 
@@ -373,7 +372,7 @@ extern void SIM_WIFI_ReceiveByte(size_t link_id, uint8_t byte)
 		ASSERT(link_id < RLM3_WIFI_LINK_COUNT);
 		auto& s = g_server_settings[link_id];
 		ASSERT(s.is_connected);
-		RLM3_WIFI_Receive_Callback(link_id, byte);
+		RLM3_WIFI_Receive_CB_ISR(link_id, byte);
 	});
 }
 
@@ -394,7 +393,7 @@ extern void SIM_WIFI_Connect(size_t link_id)
 		ASSERT(!s.is_connected);
 		s.is_connected = true;
 		s.is_local_connection = true;
-		RLM3_WIFI_NetworkConnect_Callback(link_id, s.is_local_connection);
+		RLM3_WIFI_NetworkConnect_CB_ISR(link_id, s.is_local_connection);
 	});
 }
 
@@ -407,7 +406,7 @@ extern void SIM_WIFI_Disconnect(size_t link_id)
 		auto& s = g_server_settings[link_id];
 		ASSERT(s.is_connected);
 		s.is_connected = false;
-		RLM3_WIFI_NetworkDisconnect_Callback(link_id, s.is_local_connection);
+		RLM3_WIFI_NetworkDisconnect_CB_ISR(link_id, s.is_local_connection);
 	});
 }
 

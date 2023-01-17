@@ -1,6 +1,7 @@
-#include "CommInput.hpp"
+#include "../../firmware/main/CommInput.hpp"
+
+#include "../../firmware-base/release/CommMessage.hpp"
 #include "rlm3-task.h"
-#include "CommMessage.hpp"
 #include "Crc8.hpp"
 #include "logger.h"
 

@@ -23,7 +23,7 @@ extern bool RLM3_Timer2_IsInit()
 	return g_timer2_is_initialized;
 }
 
-extern "C" __attribute__((weak)) void RLM3_Timer2_Event_CB_ISR()
+extern __attribute__((weak)) void RLM3_Timer2_Event_CB_ISR()
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 	ASSERT(false);
