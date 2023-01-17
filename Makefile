@@ -1,22 +1,26 @@
 
-PACKAGES = $(wildcard packages/*)
+.PHONY : default all clean
 
-define NEWLINE
+default : all
 
-
-endef
-
-.PHONY : default all release test build-deps clean
-
-default : release
-
-all : release test
-
-$(eval build-deps : $(foreach file, $(PACKAGES), $(NEWLINE)	$(MAKE) -C $(file) --no-print-directory build-deps))
-
-$(eval release : build-deps $(foreach file, $(PACKAGES), $(NEWLINE)	$(MAKE) -C $(file) --no-print-directory release))
-
-$(eval test : build-deps $(foreach file, $(PACKAGES), $(NEWLINE)	$(MAKE) -C $(file) --no-print-directory test))
+all :
+	$(MAKE) -C sources/build-scripts
+	$(MAKE) -C sources/test
+	$(MAKE) -C sources/logger
+	$(MAKE) -C sources/hash
+	$(MAKE) -C sources/hw-test-agent
+	$(MAKE) -C sources/test-stm32
+	$(MAKE) -C sources/rlm3-hardware
+	$(MAKE) -C sources/rlm-base
+	$(MAKE) -C sources/rlm3-driver-base
+	$(MAKE) -C sources/rlm3-driver-base-sim
+	$(MAKE) -C sources/rlm3-driver-flash
+	$(MAKE) -C sources/rlm3-driver-flash-sim
+	$(MAKE) -C sources/rlm3-driver-wifi
+	$(MAKE) -C sources/rlm3-driver-wifi-sim
+	$(MAKE) -C sources/firmware
+	$(MAKE) -C sources/firmware-base
+	
 
 clean :
 	rm -rf build
