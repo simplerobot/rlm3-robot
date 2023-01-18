@@ -10,4 +10,4 @@ extern bool CommInput_PutMessageByteISR(uint8_t byte);
 extern void CommInput_ResetPipeISR();
 
 
-extern void CommInput_Control_Callback(uint32_t time, int8_t left, int8_t right, int8_t blade);
+extern void CommInput_Control_Callback(uint32_t time, float left, float right, float blade);

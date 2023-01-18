@@ -6,11 +6,11 @@
 
 static size_t g_control_call_count = 0;
 static uint32_t g_control_time = 0;
-static int8_t g_control_left = 0;
-static int8_t g_control_right = 0;
-static int8_t g_control_blade = 0;
+static float g_control_left = 0;
+static float g_control_right = 0;
+static float g_control_blade = 0;
 
-extern void CommInput_Control_Callback(uint32_t time, int8_t left, int8_t right, int8_t blade)
+extern void CommInput_Control_Callback(uint32_t time, float left, float right, float blade)
 {
 	g_control_call_count++;
 	g_control_time = time;
@@ -52,9 +52,9 @@ TEST_CASE(CommInput_HappyCase)
 	AddMessageInterrupts(crc, {
 			4, // MESSAGE_TYPE_CONTROL
 			0x12, 0x34, 0x56, 0x78, // time
-			122, // left
+			121, // left
 			(uint8_t)-7, // right
-			5, // blade
+			13, // blade
 	});
 	// Tell the input thread to stop.
 	SIM_AddInterrupt([] { CommInput_AbortTaskISR(); });
@@ -64,9 +64,9 @@ TEST_CASE(CommInput_HappyCase)
 
 	ASSERT(g_control_call_count == 1);
 	ASSERT(g_control_time == 0x12345678);
-	ASSERT(g_control_left == 122);
-	ASSERT(g_control_right == -7);
-	ASSERT(g_control_blade == 5);
+	ASSERT(std::abs(g_control_left - 0.95) < 0.01);
+	ASSERT(std::abs(g_control_right - -0.05) < 0.01);
+	ASSERT(std::abs(g_control_blade - 0.10) < 0.01);
 }
 
 TEST_CASE(CommInput_MultipleMessages)

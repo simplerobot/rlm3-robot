@@ -40,6 +40,15 @@ static int8_t ExtractI8(size_t offset)
 	return (int8_t)ExtractU8(offset);
 }
 
+static float ExtractF8(size_t offset)
+{
+	int8_t i = ExtractI8(offset);
+	if (i >= 0)
+		return 1.0f * i / 127; // i : [0, 127]
+	else
+		return 1.0f * i / 128 ; // i : [-128, -1]
+}
+
 extern void CommInput_RunTask()
 {
 	g_task = RLM3_Task_GetCurrent();
@@ -77,9 +86,9 @@ extern void CommInput_RunTask()
 			case MESSAGE_TYPE_CONTROL:
 				{
 					uint32_t time = ExtractU32(tail + offsetof(MESSAGE_BODY_CONTROL, time));
-					int8_t left = ExtractI8(tail + offsetof(MESSAGE_BODY_CONTROL, left));
-					int8_t right = ExtractI8(tail + offsetof(MESSAGE_BODY_CONTROL, right));
-					int8_t blade = ExtractI8(tail + offsetof(MESSAGE_BODY_CONTROL, blade));
+					float left = ExtractF8(tail + offsetof(MESSAGE_BODY_CONTROL, left));
+					float right = ExtractF8(tail + offsetof(MESSAGE_BODY_CONTROL, right));
+					float blade = ExtractF8(tail + offsetof(MESSAGE_BODY_CONTROL, blade));
 					CommInput_Control_Callback(time, left, right, blade);
 				}
 				break;
@@ -186,7 +195,7 @@ extern void CommInput_ResetPipeISR()
 	g_current_message_size_remaining = 0;
 }
 
-extern __attribute__((weak)) void CommInput_Control_Callback(uint32_t time, int8_t left, int8_t right, int8_t blade)
+extern __attribute__((weak)) void CommInput_Control_Callback(uint32_t time, float left, float right, float blade)
 {
 	// DO NOT MODIFIY THIS FUNCTION.  Override it by declaring a non-weak version in your project files.
 }

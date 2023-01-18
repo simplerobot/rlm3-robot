@@ -9,20 +9,44 @@ static RLM3_Task g_task = nullptr;
 static volatile bool g_abort = false;
 
 static volatile uint32_t g_control_time = 0;
-static volatile int8_t g_control_left = 0;
-static volatile int8_t g_control_right = 0;
-static volatile int8_t g_control_blade = 0;
+static volatile float g_control_left = 0;
+static volatile float g_control_right = 0;
+static volatile float g_control_blade = 0;
 
 
 extern void Control_RunTask()
 {
+	bool is_active = false;
+
 	RLM3_Motors_Init();
 
 	while (!g_abort)
 	{
-		if (RLM3_Time_Get() - g_control_time > MAX_CONTROL_DELAY_MS)
+		if (RLM3_Time_Get() - g_control_time <= MAX_CONTROL_DELAY_MS)
 		{
-			// Disable motors.
+			// Make sure motors are active.
+			if (!is_active)
+			{
+				RLM3_Motors_Enable();
+			}
+
+			// Move.
+			RLM3_Motors_SetWheels(g_control_left, g_control_right);
+			RLM3_Motors_SetBlade(g_control_blade);
+		}
+		else
+		{
+			// Make sure motors are disabled.
+			if (is_active)
+			{
+				RLM3_Motors_Disable();
+				is_active = false;
+			}
+
+			// Make sure motors will not move.
+			g_control_left = 0.0f;
+			g_control_right = 0.0f;
+			g_control_blade = 0.0f;
 		}
 
 		RLM3_Task_TakeWithTimeout(50);
@@ -44,7 +68,7 @@ extern void Control_AbortTaskISR()
 	RLM3_Task_GiveISR(g_task);
 }
 
-extern void CommInput_Control_Callback(uint32_t time, int8_t left, int8_t right, int8_t blade)
+extern void CommInput_Control_Callback(uint32_t time, float left, float right, float blade)
 {
 	g_control_left = left;
 	g_control_right = right;
