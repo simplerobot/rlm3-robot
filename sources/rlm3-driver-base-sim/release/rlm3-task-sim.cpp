@@ -28,6 +28,8 @@ extern void RLM3_Task_Yield()
 {
 	if (SIM_IsISR())
 		FAIL("RLM3_Yield called from an ISR routine.");
+	if (!SIM_IsMainTask())
+		FAIL("RLM3_Yield called from a secondary task.");
 	if (SIM_IsInCritical())
 		FAIL("RLM3_Yield called while in a critical section.");
 	// Nothing to do since we don't support threads in the simulator.
@@ -37,6 +39,8 @@ extern void RLM3_Task_Delay(RLM3_Time delay_ms)
 {
 	if (SIM_IsISR())
 		FAIL("RLM3_Delay called from an ISR routine.");
+	if (!SIM_IsMainTask())
+		FAIL("RLM3_Delay called from a secondary task.");
 	if (SIM_IsInCritical())
 		FAIL("RLM3_Delay called while in a critical section.");
 	g_current_time += delay_ms;
@@ -44,6 +48,10 @@ extern void RLM3_Task_Delay(RLM3_Time delay_ms)
 
 extern void RLM3_Task_DelayUntil(RLM3_Time start_time, RLM3_Time delay_ms)
 {
+	if (SIM_IsISR())
+		FAIL("RLM3_Delay called from an ISR routine.");
+	if (!SIM_IsMainTask())
+		FAIL("RLM3_Delay called from a secondary task.");
 	if (g_current_time < start_time)
 		FAIL("RLM3_DelayUntil called with a futuristic start time. %d vs %d", (int)g_current_time, (int)start_time);
 	if (SIM_IsInCritical())
@@ -60,6 +68,8 @@ extern RLM3_Task RLM3_Task_Create(RLM3_Task_Fn fn, size_t stack_size_words, cons
 
 extern RLM3_Task RLM3_Task_GetCurrent()
 {
+	if (!SIM_IsMainTask())
+		FAIL("RLM3_Task_GetCurrent called from a secondary task.");
 	return k_task_id;
 }
 
@@ -94,14 +104,16 @@ extern void RLM3_Task_Take()
 {
 	if (SIM_IsISR())
 		FAIL("RLM3_Take called from an ISR routine.");
+	if (!SIM_IsMainTask())
+		FAIL("RLM3_Take called from a secondary task.");
 	if (SIM_IsInCritical())
 		FAIL("RLM3_Take called while in a critical section.");
 	while (!g_is_task_active)
 	{
-		if (!SIM_HasNextInterrupt())
+		if (!SIM_HasNextHandler())
 			FAIL("Test thread sleeping with no more interrupts available to wake it up. (Make sure you are calling RLM3_Give or RLM3_GiveFromISR or SIM_Give)");
-		g_current_time = SIM_GetNextInterruptTime();
-		SIM_RunNextInterrupt();
+		g_current_time = SIM_GetNextHandlerTime();
+		SIM_RunNextHandler();
 	}
 	g_is_task_active = false;
 }
@@ -110,24 +122,26 @@ extern bool RLM3_Task_TakeWithTimeout(RLM3_Time timeout_ms)
 {
 	if (SIM_IsISR())
 		FAIL("RLM3_TakeWithTimeout called from an ISR routine.");
+	if (!SIM_IsMainTask())
+		FAIL("RLM3_TakeWithTimeout called from a secondary task.");
 	if (SIM_IsInCritical())
 		FAIL("RLM3_TakeWithTimeout called while in a critical section.");
 	RLM3_Time end_time = g_current_time + timeout_ms;
 	while (!g_is_task_active)
 	{
-		if (!SIM_HasNextInterrupt())
+		if (!SIM_HasNextHandler())
 		{
 			g_current_time = end_time;
 			return false;
 		}
-		RLM3_Time next_time = SIM_GetNextInterruptTime();
+		RLM3_Time next_time = SIM_GetNextHandlerTime();
 		if (next_time > end_time)
 		{
 			g_current_time = end_time;
 			return false;
 		}
 		g_current_time = next_time;
-		SIM_RunNextInterrupt();
+		SIM_RunNextHandler();
 	}
 	g_is_task_active = false;
 	return true;
@@ -135,6 +149,12 @@ extern bool RLM3_Task_TakeWithTimeout(RLM3_Time timeout_ms)
 
 extern bool RLM3_Task_TakeUntil(RLM3_Time start_time, RLM3_Time delay_ms)
 {
+	if (SIM_IsISR())
+		FAIL("RLM3_TakeWithTimeout called from an ISR routine.");
+	if (!SIM_IsMainTask())
+		FAIL("RLM3_TakeWithTimeout called from a secondary task.");
+	if (SIM_IsInCritical())
+		FAIL("RLM3_TakeWithTimeout called while in a critical section.");
 	ASSERT(g_current_time >= start_time);
 	if (SIM_IsInCritical())
 		FAIL("RLM3_TakeUntil called while in a critical section.");

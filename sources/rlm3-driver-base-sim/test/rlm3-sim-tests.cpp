@@ -6,13 +6,13 @@ TEST_CASE(SIM_AddInterrupt_HappyCase)
 {
 	bool called = false;
 
-	ASSERT(!SIM_HasNextInterrupt());
+	ASSERT(!SIM_HasNextHandler());
 	SIM_AddInterrupt([&]() { called = true; });
-	ASSERT(SIM_HasNextInterrupt());
+	ASSERT(SIM_HasNextHandler());
 	ASSERT(!called);
-	SIM_RunNextInterrupt();
+	SIM_RunNextHandler();
 	ASSERT(called);
-	ASSERT(!SIM_HasNextInterrupt());
+	ASSERT(!SIM_HasNextHandler());
 }
 
 TEST_CASE(SIM_RLM3_Is_IRQ_FromMainThread)
@@ -25,7 +25,7 @@ TEST_CASE(SIM_RLM3_Is_IRQ_FromInterrupt)
 	SIM_AddInterrupt([]() {
 		ASSERT(SIM_IsISR());
 	});
-	SIM_RunNextInterrupt();
+	SIM_RunNextHandler();
 }
 
 TEST_CASE(SIM_GetNextInterruptTime_HappyCase)
@@ -34,10 +34,10 @@ TEST_CASE(SIM_GetNextInterruptTime_HappyCase)
 	SIM_AddDelay(10);
 	SIM_AddInterrupt([&]() {});
 
-	ASSERT(SIM_GetNextInterruptTime() == 0);
-	SIM_RunNextInterrupt();
-	ASSERT(SIM_GetNextInterruptTime() == 10);
-	SIM_RunNextInterrupt();
+	ASSERT(SIM_GetNextHandlerTime() == 0);
+	SIM_RunNextHandler();
+	ASSERT(SIM_GetNextHandlerTime() == 10);
+	SIM_RunNextHandler();
 }
 
 TEST_CASE(SafeString_HappyCase)

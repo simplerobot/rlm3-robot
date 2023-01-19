@@ -9,8 +9,8 @@ all :
 	$(MAKE) -C sources/logger
 	$(MAKE) -C sources/hash
 	$(MAKE) -C sources/hw-test-agent
-	$(MAKE) -C sources/test-stm32
 	$(MAKE) -C sources/rlm3-hardware
+	$(MAKE) -C sources/test-stm32
 	$(MAKE) -C sources/rlm-base
 	$(MAKE) -C sources/rlm3-driver-base
 	$(MAKE) -C sources/rlm3-driver-base-sim

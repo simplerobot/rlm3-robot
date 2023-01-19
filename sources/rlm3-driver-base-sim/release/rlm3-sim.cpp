@@ -7,21 +7,24 @@
 #include <sstream>
 
 
-struct InterruptHandler
+struct Handler
 {
-	InterruptHandler(RLM3_Time delay, std::function<void()> handler)
+	Handler(RLM3_Time delay, std::function<void()> handler, bool is_interrupt)
 		: delay(delay)
 		, handler(handler)
+		, is_interrupt(is_interrupt)
 	{
 	}
 
 	RLM3_Time delay;
 	std::function<void()> handler;
+	bool is_interrupt;
 };
 
 static bool g_is_in_interrupt_handler = false;
-static std::queue<InterruptHandler> g_sim_interrupt_queue;
-static RLM3_Time g_last_interrupt_time = 0;
+static bool g_is_in_secondary_task = false;
+static std::queue<Handler> g_sim_handler_queue;
+static RLM3_Time g_last_handler_time = 0;
 static RLM3_Time g_next_delay = 0;
 
 
@@ -30,10 +33,22 @@ extern bool SIM_IsISR()
 	return g_is_in_interrupt_handler;
 }
 
+extern bool SIM_IsMainTask()
+{
+	return !g_is_in_secondary_task;
+}
+
 extern void SIM_AddInterrupt(std::function<void()> interrupt)
 {
 	ASSERT(!SIM_IsISR());
-	g_sim_interrupt_queue.emplace(g_next_delay, interrupt);
+	g_sim_handler_queue.emplace(g_next_delay, interrupt, true);
+	g_next_delay = 0;
+}
+
+extern void SIM_AddTask(std::function<void()> task)
+{
+	ASSERT(!SIM_IsISR());
+	g_sim_handler_queue.emplace(g_next_delay, task, false);
 	g_next_delay = 0;
 }
 
@@ -43,18 +58,18 @@ extern void SIM_AddDelay(RLM3_Time delay)
 	g_next_delay += delay;
 }
 
-extern bool SIM_HasNextInterrupt()
+extern bool SIM_HasNextHandler()
 {
 	ASSERT(!SIM_IsISR());
-	return !g_sim_interrupt_queue.empty();
+	return !g_sim_handler_queue.empty();
 }
 
-extern RLM3_Time SIM_GetNextInterruptTime()
+extern RLM3_Time SIM_GetNextHandlerTime()
 {
 	ASSERT(!SIM_IsISR());
-	ASSERT(!g_sim_interrupt_queue.empty());
+	ASSERT(!g_sim_handler_queue.empty());
 	RLM3_Time current_time = RLM3_Time_Get();
-	RLM3_Time target_time = g_last_interrupt_time + g_sim_interrupt_queue.front().delay;
+	RLM3_Time target_time = g_last_handler_time + g_sim_handler_queue.front().delay;
 	return std::max(current_time, target_time);
 }
 
@@ -62,6 +77,10 @@ extern void SIM_DoInterrupt(std::function<void()> interrupt)
 {
 	if (SIM_IsInCritical())
 		FAIL("Trying to execute an interrupt while in a critical section.");
+	if (SIM_IsISR())
+		FAIL("Trying to execute an interrupt while already in an interrupt.");
+	if (!SIM_IsMainTask())
+		FAIL("Trying to execute an interrupt while in a secondary task.");
 
 	try
 	{
@@ -77,34 +96,71 @@ extern void SIM_DoInterrupt(std::function<void()> interrupt)
 
 	if (SIM_IsInCritical())
 		FAIL("Interrupt handler finished while in a critical section.");
+	if (SIM_IsISR())
+		FAIL("Interrupt handler finished while already in an interrupt.");
+	if (!SIM_IsMainTask())
+		FAIL("Interrupt handler finished while in a secondary task.");
 }
 
-extern void SIM_RunNextInterrupt()
+extern void SIM_DoTask(std::function<void()> task)
+{
+	if (SIM_IsInCritical())
+		FAIL("Trying to execute a task while in a critical section.");
+	if (SIM_IsISR())
+		FAIL("Trying to execute a task while already in an interrupt.");
+	if (!SIM_IsMainTask())
+		FAIL("Trying to execute a task while in a secondary task.");
+
+	try
+	{
+		g_is_in_secondary_task = true;
+		task();
+		g_is_in_secondary_task = false;
+	}
+	catch (...)
+	{
+		g_is_in_secondary_task = false;
+		throw;
+	}
+
+	if (SIM_IsInCritical())
+		FAIL("Task handler finished while in a critical section.");
+	if (SIM_IsISR())
+		FAIL("Task handler finished while already in an interrupt.");
+	if (!SIM_IsMainTask())
+		FAIL("Task handler finished while in a secondary task.");
+}
+
+extern void SIM_RunNextHandler()
 {
 	ASSERT(!SIM_IsISR());
-	ASSERT(!g_sim_interrupt_queue.empty());
+	ASSERT(!g_sim_handler_queue.empty());
 	ASSERT(!SIM_IsInCritical());
-	g_last_interrupt_time = RLM3_Time_Get();
+	g_last_handler_time = RLM3_Time_Get();
 
-	auto handler = g_sim_interrupt_queue.front().handler;
-	g_sim_interrupt_queue.pop();
-	SIM_DoInterrupt(handler);
+	auto handler = g_sim_handler_queue.front();
+	g_sim_handler_queue.pop();
+
+	if (handler.is_interrupt)
+		SIM_DoInterrupt(handler.handler);
+	else
+		SIM_DoTask(handler.handler);
 }
 
 
 TEST_SETUP(SIMULATOR_INITIALIZATION)
 {
 	g_is_in_interrupt_handler = false;
-	while (!g_sim_interrupt_queue.empty())
-		g_sim_interrupt_queue.pop();
-	g_last_interrupt_time = 0;
+	while (!g_sim_handler_queue.empty())
+		g_sim_handler_queue.pop();
+	g_last_handler_time = 0;
 	g_next_delay = 0;
 }
 
 TEST_FINISH(SIMULATOR_VALIDATE)
 {
-	if (!g_sim_interrupt_queue.empty())
-		FAIL("Simulator did not use all interrupt events.");
+	if (!g_sim_handler_queue.empty())
+		FAIL("Simulator did not use all task/interrupt events.");
 }
 
 extern std::string SIM_SafeString(const std::string& input)

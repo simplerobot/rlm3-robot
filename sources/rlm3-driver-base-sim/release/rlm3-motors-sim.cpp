@@ -44,6 +44,9 @@ extern void RLM3_Motors_Disable()
 	ASSERT(g_is_initialized);
 	ASSERT(g_is_enabled);
 
+	g_left = 0.0f;
+	g_right = 0.0f;
+	g_blade = 0.0f;
 	g_is_enabled = false;
 }
 
@@ -86,4 +89,13 @@ extern float SIM_Motors_GetRight()
 extern float SIM_Motors_GetBlade()
 {
 	return g_blade;
+}
+
+TEST_SETUP(SIM_Motors_Setup)
+{
+	g_is_initialized = false;
+	g_is_enabled = false;
+	g_left = 0.0f;
+	g_right = 0.0f;
+	g_blade = 0.0f;
 }
