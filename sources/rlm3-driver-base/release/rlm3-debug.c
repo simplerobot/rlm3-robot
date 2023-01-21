@@ -24,16 +24,17 @@ extern bool RLM3_Debug_IsActiveISR()
 	return true;
 }
 
-extern void RLM3_Debug_Output(uint8_t c)
+extern bool RLM3_Debug_Output(uint8_t c)
 {
 	ASSERT(!RLM3_Task_IsISR());
 	if ((ITM->TCR & ITM_TCR_ITMENA_Msk) == 0)
-		return;
+		return false;
 	if ((ITM->TER & 1UL) == 0)
-		return;
+		return false;
 	while (ITM->PORT[0U].u32 == 0UL)
 		RLM3_Task_Yield();
 	ITM->PORT[0U].u8 = c;
+	return true;
 }
 
 extern bool RLM3_Debug_OutputISR(uint8_t c)
@@ -47,4 +48,12 @@ extern bool RLM3_Debug_OutputISR(uint8_t c)
 		return false;
 	ITM->PORT[0U].u8 = c;
 	return true;
+}
+
+extern bool RLM3_Debug_OutputSafe(uint8_t c)
+{
+	if (RLM3_Task_IsISR())
+		return RLM3_Debug_OutputISR(c);
+	else
+		return RLM3_Debug_Output(c);
 }

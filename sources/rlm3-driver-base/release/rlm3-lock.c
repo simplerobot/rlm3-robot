@@ -76,6 +76,22 @@ extern void RLM3_Lock_ExitCriticalISR(uint32_t saved_level)
 #endif
 }
 
+extern uint32_t RLM3_Lock_EnterCriticalSafe()
+{
+	if (RLM3_Task_IsISR())
+		return RLM3_Lock_EnterCriticalISR();
+	RLM3_Lock_EnterCritical();
+	return 0;
+}
+
+extern void RLM3_Lock_ExitCriticalSafe(uint32_t saved_level)
+{
+	if (RLM3_Task_IsISR())
+		RLM3_Lock_ExitCriticalISR(saved_level);
+	else
+		RLM3_Lock_ExitCritical();
+}
+
 static bool Atomic_SetBool(volatile bool* value)
 {
 	bool old_value;

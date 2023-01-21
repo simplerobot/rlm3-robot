@@ -69,3 +69,4 @@ extern void TIM2_IRQHandler(void)
 	__HAL_TIM_CLEAR_IT(&g_htim2, TIM_IT_UPDATE);
 	RLM3_Timer2_Event_CB_ISR();
 }
+

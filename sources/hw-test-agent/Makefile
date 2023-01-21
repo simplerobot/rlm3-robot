@@ -1,16 +1,17 @@
 DEPS += build-scripts
 DEPS += logger
+DEPS += assert
 DEPS += test
 include ../build-scripts/release/include.make
 
 TEST_BUILD_DIR = $(BUILD_DIR)/test
 MAIN_BUILD_DIR = $(BUILD_DIR)/main
 
-TEST_SOURCE_DIRS = $(LIBRARY_DIR) test main $(PKG_LOGGER_DIR) $(PKG_TEST_DIR)
+TEST_SOURCE_DIRS = $(LIBRARY_DIR) test main $(PKG_LOGGER_DIR) $(PKG_ASSERT_DIR) $(PKG_TEST_DIR)
 TEST_SOURCE_FILES = $(notdir $(wildcard $(TEST_SOURCE_DIRS:%=%/*.cpp) $(TEST_SOURCE_DIRS:%=%/*.c)))
 TEST_O_FILES = $(addsuffix .o,$(basename $(TEST_SOURCE_FILES)))
 
-MAIN_SOURCE_DIRS = $(LIBRARY_DIR) main $(PKG_LOGGER_DIR)
+MAIN_SOURCE_DIRS = $(LIBRARY_DIR) main $(PKG_LOGGER_DIR) $(PKG_ASSERT_DIR)
 MAIN_SOURCE_FILES = $(notdir $(wildcard $(MAIN_SOURCE_DIRS:%=%/*.cpp) $(MAIN_SOURCE_DIRS:%=%/*.c)))
 MAIN_O_FILES = $(addsuffix .o,$(basename $(MAIN_SOURCE_FILES)))
 

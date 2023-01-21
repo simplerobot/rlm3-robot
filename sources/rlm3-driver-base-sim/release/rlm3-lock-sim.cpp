@@ -1,5 +1,6 @@
 #include "rlm3-lock.h"
 #include "rlm3-sim.hpp"
+#include "rlm3-task.h"
 #include "Test.hpp"
 
 
@@ -50,6 +51,22 @@ extern void RLM3_Lock_ExitCriticalISR(uint32_t saved_level)
 	ASSERT(saved_level == g_saved_critical_level);
 
 	g_is_critical_isr = false;
+}
+
+extern uint32_t RLM3_Lock_EnterCriticalSafe()
+{
+	if (RLM3_Task_IsISR())
+		return RLM3_Lock_EnterCriticalISR();
+	RLM3_Lock_EnterCritical();
+	return 0;
+}
+
+extern void RLM3_Lock_ExitCriticalSafe(uint32_t saved_level)
+{
+	if (RLM3_Task_IsISR())
+		RLM3_Lock_ExitCriticalISR(saved_level);
+	else
+		RLM3_Lock_ExitCritical();
 }
 
 extern void RLM3_SpinLock_Init(RLM3_SpinLock* lock)

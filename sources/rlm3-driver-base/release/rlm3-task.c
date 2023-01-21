@@ -28,6 +28,14 @@ extern RLM3_Time RLM3_Time_GetISR()
 	return xTaskGetTickCountFromISR();
 }
 
+extern RLM3_Time RLM3_Time_GetSafe()
+{
+	if (RLM3_Task_IsISR())
+		return RLM3_Time_GetISR();
+	else
+		return RLM3_Time_Get();
+}
+
 extern bool RLM3_Task_IsSchedulerRunning()
 {
 	return (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING);

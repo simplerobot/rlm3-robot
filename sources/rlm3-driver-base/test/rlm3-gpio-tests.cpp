@@ -11,7 +11,7 @@ TEST_CASE(GPIO_Lifecycle)
 	ASSERT(!RLM3_GPIO_IsInit());
 }
 
-#define TEST_PIN_PP(PIN)                                      \
+#define TEST_PIN_PP(PIN)                                        \
 	RLM3_GPIO_WifiBootMode_SetHigh();                           \
 	ASSERT(!RLM3_GPIO_WifiBootMode_IsLow());                    \
 	ASSERT(RLM3_GPIO_WifiBootMode_IsHigh());                    \

@@ -1,4 +1,5 @@
 DEPS += build-scripts
+DEPS += assert
 include ../build-scripts/release/include.make
 
 TEST_SOURCE_DIR = test
@@ -6,9 +7,9 @@ TEST_SOURCE_DIR = test
 TEST_BUILD_DIR = $(BUILD_DIR)/test
 
 CC = g++
-CFLAGS = -Wall -Werror -DTEST -DEXCLUDE_LOGGER -I$(LIBRARY_DIR) -I$(PKG_LOGGER_DIR) -fsanitize=address -static-libasan -g -Og
+CFLAGS = -Wall -Werror -DTEST -DEXCLUDE_LOGGER -I$(LIBRARY_DIR) -I$(PKG_ASSERT_DIR) -fsanitize=address -static-libasan -g -Og
 
-TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(TEST_SOURCE_DIR)
+TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(TEST_SOURCE_DIR) $(PKG_ASSERT_DIR)
 TEST_SOURCE_FILES = $(notdir $(wildcard $(TEST_SOURCE_DIRS:%=%/*.cpp) $(TEST_SOURCE_DIRS:%=%/*.c)))
 TEST_O_FILES = $(addsuffix .o,$(basename $(TEST_SOURCE_FILES)))
 

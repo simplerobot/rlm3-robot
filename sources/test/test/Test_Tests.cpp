@@ -38,38 +38,6 @@ TEST_CASE(ASSERT_Fails)
 	ASSERT(!test_case.Run());
 }
 
-TEST_CASE(ASSERT_TRUE_Passes)
-{
-	auto test = []() { ASSERT_TRUE(true); };
-	TestCaseListItem test_case(test, "TEST_CONSTRUCTOR", "FILE", 1234);
-
-	ASSERT(test_case.Run());
-}
-
-TEST_CASE(ASSERT_TRUE_Fails)
-{
-	auto test = []() { ASSERT_TRUE(false); };
-	TestCaseListItem test_case(test, "TEST_CONSTRUCTOR", "FILE", 1234);
-
-	ASSERT(!test_case.Run());
-}
-
-TEST_CASE(ASSERT_FALSE_Passes)
-{
-	auto test = []() { ASSERT_FALSE(false); };
-	TestCaseListItem test_case(test, "TEST_CONSTRUCTOR", "FILE", 1234);
-
-	ASSERT(test_case.Run());
-}
-
-TEST_CASE(ASSERT_FALSE_Fails)
-{
-	auto test = []() { ASSERT_FALSE(true); };
-	TestCaseListItem test_case(test, "TEST_CONSTRUCTOR", "FILE", 1234);
-
-	ASSERT(!test_case.Run());
-}
-
 TEST_CASE(ASSERT_THROWS_Passes)
 {
 	auto test = []() { ASSERT_THROWS(throw std::runtime_error("error")); };

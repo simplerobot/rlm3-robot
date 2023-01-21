@@ -32,6 +32,8 @@ extern void RLM3_Lock_EnterCritical();
 extern void RLM3_Lock_ExitCritical();
 extern uint32_t RLM3_Lock_EnterCriticalISR();
 extern void RLM3_Lock_ExitCriticalISR(uint32_t saved_level);
+extern uint32_t RLM3_Lock_EnterCriticalSafe();
+extern void RLM3_Lock_ExitCriticalSafe(uint32_t saved_level);
 
 extern void RLM3_SpinLock_Init(RLM3_SpinLock* lock);
 extern void RLM3_SpinLock_Deinit(RLM3_SpinLock* lock);

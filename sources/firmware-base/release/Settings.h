@@ -83,6 +83,7 @@ typedef struct FlashLayout
 
 } FlashLayout;
 
+
 // This structure defines the layout of data in the external 8MB SDRAM module.
 typedef struct ExternalMemoryLayout
 {
@@ -105,8 +106,8 @@ typedef struct ExternalMemoryLayout
 
 	// Log data/buffer
 	uint32_t log_magic; // Magic value to keep log information over a restart.  'LOGM'
-	uint32_t log_head; // Next index (mod buffer size) to write data into the log buffer.
-	uint32_t log_tail; // Next index (mod buffer size) to read data from the log buffer.
+	volatile uint32_t log_head; // Next index (mod buffer size) to write data into the log buffer.
+	volatile uint32_t log_tail; // Next index (mod buffer size) to read data from the log buffer.
 	char log_buffer[1024 * 1024];
 
 	// Additional heap?
@@ -114,6 +115,12 @@ typedef struct ExternalMemoryLayout
 
 	uint8_t reserved[4192152];
 } ExternalMemoryLayout;
+
+
+#define SETTINGS_FLASH_CONFIG_MAGIC           (0x524C4D33) // 'RLM3'
+#define SETTINGS_EXTERN_UPDATE_FIRMWARE_MAGIC (0x53524657) // 'SRFW'
+#define SETTINGS_EXTERN_FAULT_MAGIC           (0x464F554C) // 'FOUL'
+#define SETTINGS_EXTERN_LOG_MAGIC             (0x4C4F474D) // 'LOGM'
 
 
 #ifdef __cplusplus

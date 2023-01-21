@@ -1,4 +1,5 @@
 DEPS += build-scripts
+DEPS += assert
 DEPS += logger
 DEPS += test
 DEPS += rlm-base
@@ -24,19 +25,19 @@ MCU_SZ = $(MCU_TOOLCHAIN_PATH)size
 MCU_HX = $(MCU_TOOLCHAIN_PATH)objcopy -O ihex
 MCU_BN = $(MCU_TOOLCHAIN_PATH)objcopy -O binary -S
 
-MCU_CFLAGS = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fdata-sections -ffunction-sections -fno-exceptions -Wall -Werror -DUSE_HAL_DRIVER -DSTM32F427xx -DTEST -DUSE_FULL_ASSERT=1 -g -Og -gdwarf-2
+MCU_CFLAGS = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fdata-sections -ffunction-sections -fno-exceptions -Wall -Werror -DUSE_HAL_DRIVER -DSTM32F427xx -DUSE_FULL_ASSERT=1 -g -Og -gdwarf-2
 MCU_CLIBS = -lc -lm -lnosys
 
 CPU_TEST_CASE_FILES = $(wildcard test-cpu/*-Tests.cpp)
 CPU_TEST_CASES = $(CPU_TEST_CASE_FILES:test-cpu/%-Tests.cpp=%)
 CPU_TEST_BUILD_DIR = $(BUILD_DIR)/test-cpu
-CPU_TEST_SOURCE_DIRS = $(PKG_TEST_DIR) $(PKG_LOGGER_DIR) $(PKG_RLM_BASE_DIR) $(PKG_HASH_DIR) $(PKG_RLM3_DRIVER_BASE_SIM_DIR) $(PKG_RLM3_DRIVER_FLASH_SIM_DIR) $(PKG_RLM3_DRIVER_WIFI_SIM_DIR) $(PKG_FIRMWARE_BASE_DIR)
+CPU_TEST_SOURCE_DIRS = $(PKG_ASSERT_DIR) $(PKG_TEST_DIR) $(PKG_LOGGER_DIR) $(PKG_RLM_BASE_DIR) $(PKG_HASH_DIR) $(PKG_RLM3_DRIVER_BASE_SIM_DIR) $(PKG_RLM3_DRIVER_FLASH_SIM_DIR) $(PKG_RLM3_DRIVER_WIFI_SIM_DIR) $(PKG_FIRMWARE_BASE_DIR)
 CPU_TEST_SOURCE_FILES = $(notdir $(wildcard $(CPU_TEST_SOURCE_DIRS:%=%/*.c) $(CPU_TEST_SOURCE_DIRS:%=%/*.cpp)))
 CPU_TEST_O_FILES = $(addsuffix .o,$(basename $(CPU_TEST_SOURCE_FILES)))
 CPU_INCLUDES = $(CPU_TEST_SOURCE_DIRS:%=-I%) -I main
 
 MCU_BUILD_DIR = $(BUILD_DIR)/release
-MCU_SOURCE_DIRS = main $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM_BASE_DIR) $(PKG_LOGGER_DIR) $(PKG_TEST_STM32_DIR) $(PKG_HASH_DIR) $(PKG_RLM3_DRIVER_BASE_DIR) $(PKG_RLM3_DRIVER_FLASH_DIR) $(PKG_RLM3_DRIVER_WIFI_DIR) $(PKG_FIRMWARE_BASE_DIR)
+MCU_SOURCE_DIRS = main $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM_BASE_DIR) $(PKG_ASSERT_DIR) $(PKG_LOGGER_DIR) $(PKG_TEST_STM32_DIR) $(PKG_HASH_DIR) $(PKG_RLM3_DRIVER_BASE_DIR) $(PKG_RLM3_DRIVER_FLASH_DIR) $(PKG_RLM3_DRIVER_WIFI_DIR) $(PKG_FIRMWARE_BASE_DIR)
 MCU_SOURCE_FILES = $(notdir $(wildcard $(MCU_SOURCE_DIRS:%=%/*.c) $(MCU_SOURCE_DIRS:%=%/*.cpp) $(MCU_SOURCE_DIRS:%=%/*.s)))
 MCU_O_FILES = $(addsuffix .o,$(basename $(MCU_SOURCE_FILES)))
 MCU_LD_FILE = $(wildcard $(PKG_RLM3_HARDWARE_DIR)/*.ld)

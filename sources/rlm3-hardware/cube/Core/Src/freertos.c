@@ -157,11 +157,7 @@ void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
   RLM3_Main_CB();
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+  vTaskDelete(NULL);
   /* USER CODE END StartDefaultTask */
 }
 

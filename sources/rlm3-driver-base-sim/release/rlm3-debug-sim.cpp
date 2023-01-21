@@ -35,15 +35,20 @@ static bool DebugOutput(uint8_t c)
 	return true;
 }
 
-extern void RLM3_Debug_Output(uint8_t c)
+extern bool RLM3_Debug_Output(uint8_t c)
 {
 	ASSERT(!SIM_IsISR());
-	DebugOutput(c);
+	return DebugOutput(c);
 }
 
 extern bool RLM3_Debug_OutputISR(uint8_t c)
 {
 	ASSERT(SIM_IsISR());
+	return DebugOutput(c);
+}
+
+extern bool RLM3_Debug_OutputSafe(uint8_t c)
+{
 	return DebugOutput(c);
 }
 

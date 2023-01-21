@@ -1,5 +1,6 @@
 DEPS += build-scripts
 DEPS += logger
+DEPS += assert
 DEPS += test
 include ../build-scripts/release/include.make
 
@@ -10,7 +11,7 @@ CPU_TEST_SOURCE_DIR = test-cpu
 
 CPU_TEST_BUILD_DIR = $(BUILD_DIR)/test-cpu
 
-CPU_TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(CPU_TEST_SOURCE_DIR) $(PKG_LOGGER_DIR) $(PKG_TEST_DIR)
+CPU_TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(CPU_TEST_SOURCE_DIR) $(PKG_LOGGER_DIR) $(PKG_ASSERT_DIR) $(PKG_TEST_DIR)
 CPU_TEST_SOURCE_FILES = $(notdir $(wildcard $(CPU_TEST_SOURCE_DIRS:%=%/*.c) $(CPU_TEST_SOURCE_DIRS:%=%/*.cpp)))
 CPU_TEST_O_FILES = $(addsuffix .o,$(basename $(CPU_TEST_SOURCE_FILES)))
 

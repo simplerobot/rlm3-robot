@@ -1,5 +1,6 @@
 DEPS += build-scripts
 DEPS += hw-test-agent
+DEPS += assert
 DEPS += rlm-base
 DEPS += logger
 DEPS += rlm3-hardware
@@ -28,7 +29,7 @@ DEFINES = \
 TEST_BUILD_DIR = $(BUILD_DIR)/test
 
 TEST_SOURCE_DIR = test
-TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(TEST_SOURCE_DIR) $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM_BASE_DIR) $(PKG_LOGGER_DIR)
+TEST_SOURCE_DIRS = $(LIBRARY_DIR) $(TEST_SOURCE_DIR) $(PKG_ASSERT_DIR) $(PKG_RLM3_HARDWARE_DIR) $(PKG_RLM_BASE_DIR) $(PKG_LOGGER_DIR)
 TEST_SOURCE_FILES = $(notdir $(wildcard $(TEST_SOURCE_DIRS:%=%/*.c) $(TEST_SOURCE_DIRS:%=%/*.cpp) $(TEST_SOURCE_DIRS:%=%/*.s)))
 TEST_O_FILES = $(addsuffix .o,$(basename $(TEST_SOURCE_FILES)))
 TEST_LD_FILE = $(wildcard $(PKG_RLM3_HARDWARE_DIR)/*.ld)

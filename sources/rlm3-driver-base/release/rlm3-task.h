@@ -13,6 +13,7 @@ typedef void (*RLM3_Task_Fn)();
 
 extern RLM3_Time RLM3_Time_Get();
 extern RLM3_Time RLM3_Time_GetISR();
+extern RLM3_Time RLM3_Time_GetSafe();
 
 extern bool RLM3_Task_IsSchedulerRunning();
 extern bool RLM3_Task_IsISR();

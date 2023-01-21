@@ -24,6 +24,21 @@ extern RLM3_Time RLM3_Time_GetISR()
 	return g_current_time;
 }
 
+extern RLM3_Time RLM3_Time_GetSafe()
+{
+	return g_current_time;
+}
+
+extern bool RLM3_Task_IsSchedulerRunning()
+{
+	return true;
+}
+
+extern bool RLM3_Task_IsISR()
+{
+	return SIM_IsISR();
+}
+
 extern void RLM3_Task_Yield()
 {
 	if (SIM_IsISR())
